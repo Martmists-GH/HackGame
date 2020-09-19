@@ -1,0 +1,156 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version"
+    id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlin_version"
+    id "com.github.johnrengelman.shadow" version "5.2.0"
+}
+
+group = "com.martmists.hackgame"
+version = game_version
+
+configurations {
+    implementation.extendsFrom common
+    implementation.extendsFrom client
+    implementation.extendsFrom server
+}
+
+dependencies {
+    // === Common dependencies ===
+    // Kotlin
+    common "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+
+    // Argument Parsing
+    common "org.jetbrains.kotlinx:kotlinx-cli-jvm:0.3"
+
+    // Packet Serialization
+    common "org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0-RC"
+    common "org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.0.0-RC"
+
+    // Versioning (mostly unused)
+    common "net.swiftzer.semver:semver:1.1.1"
+
+    // Manifests
+    common "com.jcabi:jcabi-manifests:1.1"
+
+    // Logging
+    common "org.slf4j:slf4j-simple:1.7.30"
+
+    // === Client-only dependencies ===
+    // TUI Library
+    client "com.googlecode.lanterna:lanterna:3.0.3"
+
+    // === Server-only dependencies ===
+    // Command parser
+    server "com.mojang:brigadier:1.0.17"
+
+    // === LOADER ===
+    common 'org.ow2.asm:asm:7.3.1'
+    common 'org.ow2.asm:asm-analysis:7.3.1'
+    common 'org.ow2.asm:asm-commons:7.3.1'
+    common 'org.ow2.asm:asm-tree:7.3.1'
+    common 'org.ow2.asm:asm-util:7.3.1'
+    common ('net.fabricmc:sponge-mixin:0.8+build.18')
+    common 'com.google.jimfs:jimfs:1.1'
+    common 'net.fabricmc:fabric-loader-sat4j:2.3.5.4'
+    common 'net.fabricmc:tiny-mappings-parser:0.2.2.14'
+    common 'net.fabricmc:tiny-remapper:0.2.2.64'
+    common ('net.minecraft:launchwrapper:1.12') {
+        transitive = false
+    }
+    common 'net.sf.jopt-simple:jopt-simple:5.0.3'
+    common 'org.apache.logging.log4j:log4j-api:2.13.0'
+    common 'org.apache.logging.log4j:log4j-core:2.13.0'
+    common 'org.apache.logging.log4j:log4j-to-slf4j:2.13.0'
+    common 'com.google.code.gson:gson:2.8.6'
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        name = "Kotlinx"
+        url = "https://kotlin.bintray.com/kotlinx"
+    }
+    maven {
+        name = "Brigadier"
+        url = "https://libraries.minecraft.net"
+    }
+    maven {
+        name = 'Fabric'
+        url = 'http://maven.modmuss50.me/'
+    }
+    maven {
+        name = 'SpongePowered'
+        url = 'http://repo.spongepowered.org/maven'
+    }
+    maven {
+        name = "Jitpack"
+        url = "https://jitpack.io"
+    }
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+processResources {
+    inputs.property "version", project.game_version
+    from(sourceSets.main.resources.srcDirs) {
+        include "fabric.mod.json"
+        expand version: project.game_version
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude "fabric.mod.json"
+    }
+}
+
+
+jar {
+    enabled = false
+}
+
+def setManifest(Jar p, String type) {
+    p.manifest {
+        attributes(
+                "Main-Class": "com/martmists/hackgame/loader/Main",
+                "Game-Type": type,
+                "Game-Version": project.game_version
+        )
+    }
+}
+
+shadowJar {
+    classifier ""
+    configurations = [project.configurations.common,
+                      project.configurations.client,
+                      project.configurations.server]
+    setManifest(it, "*")
+}
+
+task serverJar(type: ShadowJar, dependsOn: classes) {
+    from sourceSets.main.output
+    exclude "com/martmists/hackgame/client/**"
+    classifier "server"
+    configurations = [project.configurations.common,
+                      project.configurations.server]
+    setManifest(it, "server")
+}
+
+task clientJar(type: ShadowJar, dependsOn: classes) {
+    from sourceSets.main.output
+    exclude "com/martmists/hackgame/server/**"
+    classifier "client"
+    configurations = [project.configurations.common,
+                      project.configurations.client]
+    setManifest(it, "client")
+}
+
+build.dependsOn(shadowJar, serverJar, clientJar)

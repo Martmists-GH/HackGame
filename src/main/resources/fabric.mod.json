@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "base",
+  "name": "Base Game",
+  "version": "${version}",
+  "environment": "*",
+  "description": "The base game.",
+  "authors": [
+    "Martmists"
+  ]
+}
