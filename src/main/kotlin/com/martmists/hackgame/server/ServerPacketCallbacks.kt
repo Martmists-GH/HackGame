@@ -19,6 +19,14 @@ object ServerPacketCallbacks {
             BuiltinPackets.PING_S2C.send(PingPacket(packet.current, Random.nextInt()), context.connection)
         }
 
+        BuiltinPackets.LOGIN_C2S.handler { packet, context ->
+            if (context.connection.session.isLoggedIn) {
+                BuiltinPackets.DISCONNECT_S2C.send(DisconnectPacket("Duplicate login packet received!", true), context.connection)
+            }
+
+            context.connection.session.onLoginPacket(packet)
+        }
+
         BuiltinPackets.COMMAND_C2S.handler { packet, context ->
             if (!context.connection.session.isLoggedIn) {
                 BuiltinPackets.DISCONNECT_S2C.send(DisconnectPacket("No login packet received!", true), context.connection)

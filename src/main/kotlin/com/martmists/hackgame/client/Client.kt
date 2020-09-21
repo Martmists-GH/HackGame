@@ -81,6 +81,7 @@ class Client {
         }
         socket.soTimeout = 120_000  // 2 minutes
         connection = ClientConnection(socket)
+        Screen.createLoginWindow()
         connection.run()
     }
 

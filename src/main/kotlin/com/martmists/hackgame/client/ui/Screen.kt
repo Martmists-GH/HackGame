@@ -9,7 +9,11 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory
 import com.googlecode.lanterna.terminal.Terminal
 import com.martmists.hackgame.client.Client
 import com.martmists.hackgame.common.packets.CommandPacket
+import com.martmists.hackgame.common.packets.LoginPacket
 import com.martmists.hackgame.common.registry.BuiltinPackets
+import java.lang.NullPointerException
+import java.util.regex.Pattern
+import kotlin.system.exitProcess
 
 object Screen {
     val terminal: Terminal
@@ -180,11 +184,57 @@ object Screen {
         mainWindow.focusedInteractable = inputBox
     }
 
+    fun createLoginWindow() {
+        val old = mainWindow.component
+
+        val loginPanel = Panel().also { root ->
+            root.layoutData = LinearLayout.createLayoutData(LinearLayout.Alignment.Center)
+
+            root.layoutManager = GridLayout(2)
+            val usernameLabel = Label("Username").also {
+                root.addComponent(it)
+            }
+            val usernameInput = TextBox().also { input ->
+                root.addComponent(input)
+            }
+
+            val passwordLabel = Label("Password").also {
+                root.addComponent(it)
+            }
+            val passwordInput = TextBox().also { input ->
+                root.addComponent(input)
+            }
+
+            fun handle(mode: String) {
+                val p = LoginPacket(usernameInput.text, passwordInput.text, mode == "signup")
+                BuiltinPackets.LOGIN_C2S.send(p, Client.INSTANCE.connection)
+                mainWindow.component = old
+                mainWindow.focusedInteractable = inputBox
+                mainWindow.setHints(listOf(Window.Hint.FULL_SCREEN, Window.Hint.NO_DECORATIONS, Window.Hint.FIT_TERMINAL_WINDOW))
+            }
+
+            val loginButton = Button("Log In") {
+                handle("login")
+            }.addTo(root)
+
+            val signUpButton = Button("Sign Up") {
+                handle("signup")
+            }.addTo(root)
+        }
+
+        mainWindow.component = loginPanel.withBorder(Borders.singleLine())
+        mainWindow.setHints(listOf(Window.Hint.CENTERED, Window.Hint.NO_DECORATIONS, Window.Hint.FIT_TERMINAL_WINDOW))
+    }
+
     fun initialize() {
 
     }
 
     fun start() {
-        gui.addWindowAndWait(mainWindow)
+        try {
+            gui.addWindowAndWait(mainWindow)
+        } catch (e: NullPointerException) {
+            exitProcess(0)
+        }
     }
 }
