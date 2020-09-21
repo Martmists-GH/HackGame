@@ -2,3 +2,5 @@
 build/
 .gradle/
 mods/
+logs/
+.mixin.out/
