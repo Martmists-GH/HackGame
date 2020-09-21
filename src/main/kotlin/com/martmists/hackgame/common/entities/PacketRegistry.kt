@@ -2,10 +2,9 @@ package com.martmists.hackgame.common.entities
 
 import com.martmists.hackgame.client.entities.ClientPacketContext
 import com.martmists.hackgame.server.entities.ServerPacketContext
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromByteArray
-import kotlinx.serialization.encodeToByteArray
+import kotlinx.serialization.*
 import kotlinx.serialization.protobuf.ProtoBuf
+import kotlin.reflect.KClass
 
 object PacketRegistry {
     val funMapped = mutableMapOf<String, PacketConfig<*, *>>()
@@ -28,14 +27,17 @@ object PacketRegistry {
         }
     }
 
-    inline fun <reified T> registerC2S(identifier: String) = registerC2S<T>(identifier, null)
-    inline fun <reified T> registerS2C(identifier: String) = registerS2C<T>(identifier, null)
-    inline fun <reified T> registerC2S(identifier: String, noinline acceptCallback: ((T, ServerPacketContext) -> Unit)?) = register("c2s:$identifier", acceptCallback)
-    inline fun <reified T> registerS2C(identifier: String, noinline acceptCallback: ((T, ClientPacketContext) -> Unit)?) = register("s2c:$identifier", acceptCallback)
+    fun <T> registerC2S(identifier: String, packetType: Class<T>) = registerC2S(identifier, packetType, null)
+    fun <T> registerS2C(identifier: String, packetType: Class<T>) = registerS2C(identifier, packetType, null)
+    fun <T> registerC2S(identifier: String, packetType: Class<T>, acceptCallback: ((T, ServerPacketContext) -> Unit)?) = register("c2s:$identifier", packetType, acceptCallback)
+    fun <T> registerS2C(identifier: String, packetType: Class<T>, acceptCallback: ((T, ClientPacketContext) -> Unit)?) = register("s2c:$identifier", packetType, acceptCallback)
 
     @Deprecated("Avoid using this")
-    inline fun <reified T, C : PacketContext> register(identifier: String, noinline acceptCallback: ((T, C) -> Unit)?): PacketConfig<T, C> {
-        val cfg = PacketConfig(identifier, { t -> ProtoBuf.encodeToByteArray(t) }, { b -> ProtoBuf.decodeFromByteArray(b) }, acceptCallback)
+    fun <T, C : PacketContext> register(identifier: String, packetType: Class<T>, acceptCallback: ((T, C) -> Unit)?): PacketConfig<T, C> {
+        val cfg = PacketConfig(identifier,
+                { t -> ProtoBuf.encodeToByteArray(ProtoBuf.serializersModule.serializer(packetType) as KSerializer<T>, t) },
+                { b -> ProtoBuf.decodeFromByteArray(ProtoBuf.serializersModule.serializer(packetType) as KSerializer<T>, b) },
+        acceptCallback)
         funMapped[identifier] = cfg
         return cfg
     }

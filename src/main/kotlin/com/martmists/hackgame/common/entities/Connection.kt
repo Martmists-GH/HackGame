@@ -42,19 +42,14 @@ abstract class Connection {
             val size = ByteBuffer.wrap(reader.readXBytes(4)).int
             val data = reader.readXBytes(size)
             logger.debug("Received packet of size $size: ${data.asList()}")
+            if (data.isEmpty()) {
+                // Disconnect
+                throw EOFException()
+            }
             data
         } catch(e: Exception) {
             logger.warn("Remote stopped responding")
             close()
-
-            if (Main.isClient) {
-                val chosen = MessageDialog.showMessageDialog(Screen.gui, "Disconnected", "Server stopped responding. Press OK to reconnect.", MessageDialogButton.Close, MessageDialogButton.OK)
-                if (chosen == MessageDialogButton.Close) {
-                    exitProcess(0)
-                } else {
-                    Client.INSTANCE.reconnect(socket.inetAddress.hostName, socket.port)
-                }
-            }
             ByteArray(0)
         }
     }

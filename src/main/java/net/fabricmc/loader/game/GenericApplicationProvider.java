@@ -140,6 +140,7 @@ public class GenericApplicationProvider implements GameProvider {
     public void launch(ClassLoader loader) {
         String targetClass = entrypoint;
         try {
+            // Additional things to be put on knot classloader in dev
             for (String name : entrypointNames) {
                 Optional<GameProviderHelper.EntrypointResult> n_entry = GameProviderHelper.findFirstClass(loader, Collections.singletonList(name));
                 URL n_url = UrlUtil.asUrl(n_entry.get().entrypointPath);

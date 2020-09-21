@@ -1,5 +1,6 @@
 package com.martmists.hackgame.server
 
+import com.martmists.hackgame.common.packets.DisconnectPacket
 import com.martmists.hackgame.common.packets.PingPacket
 import com.martmists.hackgame.common.registry.BuiltinPackets
 import com.martmists.hackgame.server.entities.ServerCommandSource
@@ -19,6 +20,10 @@ object ServerPacketCallbacks {
         }
 
         BuiltinPackets.COMMAND_C2S.handler { packet, context ->
+            if (!context.connection.session.isLoggedIn) {
+                BuiltinPackets.DISCONNECT_S2C.send(DisconnectPacket("No login packet received!", true), context.connection)
+            }
+
             try {
                 val result = Server.INSTANCE.dispatcher.execute(packet.cmd, ServerCommandSource(context.connection))
             } catch(e: Exception) {

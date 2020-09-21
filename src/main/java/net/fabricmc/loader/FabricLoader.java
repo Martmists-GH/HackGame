@@ -398,7 +398,7 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 
 	public void prepareModInit(Path newRunDir, Object gameInstance) {
 		if (!frozen) {
-			throw new RuntimeException("Cannot instantiate mods when not frozen!");
+			// throw new RuntimeException("Cannot instantiate mods when not frozen!");
 		}
 
 		if (gameInstance != null && FabricLauncherBase.getLauncher() instanceof Knot) {

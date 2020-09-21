@@ -8,12 +8,12 @@ import com.martmists.hackgame.common.packets.PingPacket
 
 object BuiltinPackets {
     // === Server to Client ===
-    val DISCONNECT_S2C = PacketRegistry.registerS2C<DisconnectPacket>("hackgame:disconnect")
-    val PING_S2C = PacketRegistry.registerS2C<PingPacket>("hackgame:ping")
+    val DISCONNECT_S2C = PacketRegistry.registerS2C("hackgame:disconnect", DisconnectPacket::class.java)
+    val PING_S2C = PacketRegistry.registerS2C("hackgame:ping", PingPacket::class.java)
 
     // === Client to Server ===
-    val DISCONNECT_C2S = PacketRegistry.registerC2S<DisconnectPacket>("hackgame:disconnect")
-    val PING_C2S = PacketRegistry.registerC2S<PingPacket>("hackgame:ping")
-    val COMMAND_C2S = PacketRegistry.registerC2S<CommandPacket>("hackgame:command")
-    val LOGIN_C2S = PacketRegistry.registerC2S<LoginPacket>("hackgame:login")
+    val DISCONNECT_C2S = PacketRegistry.registerC2S("hackgame:disconnect", DisconnectPacket::class.java)
+    val PING_C2S = PacketRegistry.registerC2S("hackgame:ping", PingPacket::class.java)
+    val COMMAND_C2S = PacketRegistry.registerC2S("hackgame:command", CommandPacket::class.java)
+    val LOGIN_C2S = PacketRegistry.registerC2S("hackgame:login", LoginPacket::class.java)
 }

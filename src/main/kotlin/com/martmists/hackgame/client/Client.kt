@@ -3,10 +3,14 @@ package com.martmists.hackgame.client
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton
 import com.martmists.hackgame.client.entities.ClientConnection
+import com.martmists.hackgame.client.entities.NullLogger
 import com.martmists.hackgame.client.ui.Screen
 import kotlinx.cli.*
 import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointClient
 import org.slf4j.LoggerFactory
+import org.slf4j.impl.SimpleLogger
+import java.io.OutputStream
+import java.io.PrintStream
 import java.net.ConnectException
 import java.net.Socket
 import kotlin.concurrent.thread
@@ -37,10 +41,12 @@ class Client {
 
     fun run(args: Array<String>) {
         val parser = ArgParser("hackgame client")
-        val mode by parser.argument(ArgType.Choice<Mode>(), description="Toggle between terminal mode and gui mode").optional().default(Mode.GUI)
+        val mode by parser.argument(ArgType.Choice<Mode>(), description = "Toggle between terminal mode and gui mode").optional().default(Mode.GUI)
         parser.parse(args)
 
         terminal = mode == Mode.CLI
+        if (terminal)
+            LOGGER = NullLogger("HackGame-Client")
 
         ClientPacketCallbacks.initialize()
         Screen.initialize()
@@ -51,7 +57,7 @@ class Client {
     fun start() {
         LOGGER.info("Starting Client")
 
-        thread(start=true, isDaemon=true, name="Network Thread Client") {
+        thread(start = true, isDaemon = true, name = "Network Thread Client") {
             reconnect(host, port)
         }
         Screen.start()
@@ -78,5 +84,5 @@ class Client {
         connection.run()
     }
 
-    val LOGGER = LoggerFactory.getLogger("HackGame-Client")!!
+    var LOGGER = LoggerFactory.getLogger("HackGame-Client")!!
 }

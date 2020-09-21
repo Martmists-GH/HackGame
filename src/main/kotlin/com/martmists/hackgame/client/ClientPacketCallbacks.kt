@@ -14,7 +14,7 @@ object ClientPacketCallbacks {
         BuiltinPackets.DISCONNECT_S2C.handler { packet, context ->
             context.connection.close()
             Client.INSTANCE.LOGGER.warn("Disconnected from server! Reason: ${packet.reason}")
-            MessageDialog.showMessageDialog(Screen.gui, "Disconnected", "Server told us to disconnect.", MessageDialogButton.OK)
+            MessageDialog.showMessageDialog(Screen.gui, "Disconnected", "Server told us to disconnect: ${packet.reason}", MessageDialogButton.OK)
             if (packet.reconnect) {
                 Client.INSTANCE.reconnect(context.connection.socket.inetAddress.hostName, context.connection.socket.port)
             } else {

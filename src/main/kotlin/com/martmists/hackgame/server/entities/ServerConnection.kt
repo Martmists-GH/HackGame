@@ -1,5 +1,6 @@
 package com.martmists.hackgame.server.entities
 
+import com.martmists.hackgame.client.entities.ClientPacketContext
 import com.martmists.hackgame.common.entities.Connection
 import com.martmists.hackgame.common.entities.DataException
 import com.martmists.hackgame.common.entities.PacketRegistry
@@ -31,10 +32,7 @@ class ServerConnection(override val socket: Socket) : Connection() {
         while (connected && socket.isConnected) {
             try {
                 val buf = readPacket()
-                if (buf.isEmpty()) {
-                    // Disconnect
-                    throw EOFException()
-                } else {
+                if (buf.isNotEmpty()) {
                     PacketRegistry.accept(buf, ServerPacketContext(this))
                 }
             } catch (e : DataException) {

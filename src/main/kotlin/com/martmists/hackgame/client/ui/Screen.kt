@@ -57,7 +57,7 @@ object Screen {
 
         mainPanel = Panel(GridLayout(2)).also { main ->
             main.layoutData = LinearLayout.createLayoutData(LinearLayout.Alignment.Fill)
-            
+
             logPanel = Panel().also { log ->
                 log.layoutData = GridLayout.createLayoutData(
                         GridLayout.Alignment.FILL,
@@ -163,6 +163,7 @@ object Screen {
                     )
                     it.callback = callback@{ cmd ->
                         logText.text = "${logText.text}\n> $cmd"
+                        logText.setCaretPosition(logText.caretPosition.column, logText.caretPosition.row+1)
                         BuiltinPackets.COMMAND_C2S.send(CommandPacket(cmd), Client.INSTANCE.connection)
                     }
                     input.addComponent(it)
