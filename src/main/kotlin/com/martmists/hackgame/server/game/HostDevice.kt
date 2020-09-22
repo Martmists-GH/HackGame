@@ -1,7 +1,7 @@
 package com.martmists.hackgame.server.game
 
 import com.martmists.hackgame.server.game.software.Software
-import com.martmists.hackgame.server.game.vfs.VFSDirectory
+import com.martmists.hackgame.server.database.dataholders.vfs.VFSDirectory
 
 data class HostDevice(
         val ip: String,

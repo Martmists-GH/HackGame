@@ -1,4 +1,4 @@
-package com.martmists.hackgame.server.game.vfs
+package com.martmists.hackgame.server.database.dataholders.vfs
 
 import kotlinx.serialization.Serializable
 

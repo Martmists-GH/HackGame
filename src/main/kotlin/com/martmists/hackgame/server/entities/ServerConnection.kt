@@ -1,6 +1,7 @@
 package com.martmists.hackgame.server.entities
 
 import com.martmists.hackgame.client.entities.ClientPacketContext
+import com.martmists.hackgame.common.DisconnectException
 import com.martmists.hackgame.common.entities.Connection
 import com.martmists.hackgame.common.entities.DataException
 import com.martmists.hackgame.common.entities.PacketRegistry
@@ -17,7 +18,7 @@ import java.net.Socket
 import java.net.SocketTimeoutException
 
 class ServerConnection(override val socket: Socket) : Connection() {
-    val session = PlayerSession()
+    val session = PlayerSession(this)
 
     @Volatile
     override var connected = true
@@ -41,6 +42,10 @@ class ServerConnection(override val socket: Socket) : Connection() {
                 when (e) {
                     is SocketTimeoutException, is EOFException -> {
                         logger.info("Stopped receiving data from client, disconnecting...")
+                        close()
+                    }
+                    is DisconnectException -> {
+                        logger.debug("Dropping error from disconnect packet")
                         close()
                     }
                     else -> {

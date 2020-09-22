@@ -10,6 +10,9 @@ group = "com.martmists.hackgame"
 version = game_version
 
 configurations {
+    runtime.extendsFrom commonRuntime
+    runtime.extendsFrom clientRuntime
+    runtime.extendsFrom serverRuntime
     implementation.extendsFrom common
     implementation.extendsFrom client
     implementation.extendsFrom server
@@ -35,6 +38,8 @@ dependencies {
 
     // Logging
     common "org.slf4j:slf4j-simple:1.7.30"
+    // TODO: Use this in prod
+    // common "org.slf4j:slf4j-nop:1.7.30"
 
     // === Client-only dependencies ===
     // TUI Library
@@ -43,6 +48,12 @@ dependencies {
     // === Server-only dependencies ===
     // Command parser
     server "com.mojang:brigadier:1.0.17"
+
+    // Database
+    server "org.jetbrains.exposed:exposed-core:0.27.1"
+    server "com.ToxicBakery.library.bcrypt:bcrypt-jvm:1.0.9"
+    serverRuntime "org.jetbrains.exposed:exposed-jdbc:0.27.1"
+    serverRuntime "org.postgresql:postgresql:42.2.2"
 
     // === LOADER ===
     common 'org.ow2.asm:asm:7.3.1'
@@ -60,7 +71,7 @@ dependencies {
     }
     common 'net.sf.jopt-simple:jopt-simple:5.0.3'
     common 'org.apache.logging.log4j:log4j-api:2.13.0'
-    common 'org.apache.logging.log4j:log4j-to-slf4j:2.13.0'
+    commonRuntime 'org.apache.logging.log4j:log4j-to-slf4j:2.13.0'
     common 'com.google.code.gson:gson:2.8.6'
 }
 
@@ -129,8 +140,11 @@ def setManifest(Jar p, String type) {
 shadowJar {
     classifier ""
     configurations = [project.configurations.common,
+                      project.configurations.commonRuntime,
                       project.configurations.client,
-                      project.configurations.server]
+                      project.configurations.clientRuntime,
+                      project.configurations.server,
+                      project.configurations.serverRuntime]
     setManifest(it, "*")
 }
 
@@ -139,7 +153,9 @@ task serverJar(type: ShadowJar, dependsOn: classes) {
     exclude "com/martmists/hackgame/client/**"
     classifier "server"
     configurations = [project.configurations.common,
-                      project.configurations.server]
+                      project.configurations.commonRuntime,
+                      project.configurations.server,
+                      project.configurations.serverRuntime]
     setManifest(it, "server")
 }
 
@@ -148,7 +164,9 @@ task clientJar(type: ShadowJar, dependsOn: classes) {
     exclude "com/martmists/hackgame/server/**"
     classifier "client"
     configurations = [project.configurations.common,
-                      project.configurations.client]
+                      project.configurations.commonRuntime,
+                      project.configurations.client,
+                      project.configurations.clientRuntime,]
     setManifest(it, "client")
 }
 

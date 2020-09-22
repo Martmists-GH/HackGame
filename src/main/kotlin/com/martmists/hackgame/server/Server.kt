@@ -1,5 +1,6 @@
 package com.martmists.hackgame.server
 
+import com.martmists.hackgame.server.database.DatabaseManager
 import com.martmists.hackgame.server.entities.ServerCommandSource
 import com.martmists.hackgame.server.entities.ServerConnection
 import com.mojang.brigadier.CommandDispatcher
@@ -34,6 +35,8 @@ class Server {
         dispatcher = CommandDispatcher<ServerCommandSource>()
         ServerCommands.initialize(dispatcher)
         ServerPacketCallbacks.initialize()
+        DatabaseManager.registerDefaultTables()
+
         LOGGER.info("Starting Server")
 
         // TODO: Event/Task thread

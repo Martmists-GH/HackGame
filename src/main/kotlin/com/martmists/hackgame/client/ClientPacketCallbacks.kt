@@ -29,6 +29,10 @@ object ClientPacketCallbacks {
                 BuiltinPackets.PING_C2S.send(PingPacket(packet.current, Random.nextInt()), context.connection)
             }
         }
+
+        BuiltinPackets.FEEDBACK_S2C.handler { packet, context ->
+            Screen.logText.addLine(packet.msg)
+        }
     }
 
     fun initialize() {
