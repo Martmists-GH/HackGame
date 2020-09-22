@@ -64,8 +64,11 @@ object CommandBuilder {
             // TODO: switch to redirects if possible
         }
 
-        fun executes(callback: (CommandContext<ServerCommandSource>) -> Int) {
-            command.executes(callback)
+        fun executes(callback: (CommandContext<ServerCommandSource>) -> Unit) {
+            command.executes {
+                callback.invoke(it)
+                1
+            }
         }
     }
 

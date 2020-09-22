@@ -2,21 +2,28 @@ package com.martmists.hackgame.server.game
 
 import com.martmists.hackgame.server.database.DatabaseManager
 import com.martmists.hackgame.server.database.dataholders.StoredHostDevice
-import com.martmists.hackgame.server.database.dataholders.vfs.VFSDirectory
 import com.martmists.hackgame.server.database.tables.HostTable
 import com.martmists.hackgame.server.entities.SoftwareRegistry
-import com.martmists.hackgame.server.game.software.Software
 import kotlinx.serialization.protobuf.ProtoBuf
-import kotlinx.serialization.SerialFormat
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import java.net.Inet4Address
+import org.jetbrains.exposed.sql.selectAll
 import kotlin.random.Random
 
 object HostManager {
     val activeHosts = mutableMapOf<String, HostDevice>()
+
+    fun loadStoredHosts() {
+        val map = DatabaseManager.transaction {
+            HostTable.selectAll().map {
+                val host = ProtoBuf.decodeFromByteArray<StoredHostDevice>(it[HostTable.device])
+                it[HostTable.address] to HostDevice(it[HostTable.address], listOf(), host.software.map(SoftwareRegistry::get), host.money, host.files)
+            }.toMap()
+        }.get()
+        activeHosts.putAll(map)
+    }
 
     fun getRandomAvailableIp(): String {
         var addr: String
@@ -30,26 +37,34 @@ object HostManager {
         return activeHosts.keys.random()
     }
 
-    fun loadOrCreateHost(ip: String, default: StoredHostDevice): HostDevice {
-        if (activeHosts.containsKey(ip)) {
-            return activeHosts[ip]!!
-        }
+    /**
+     * Does not guarantee registering if already taken
+     */
+    fun registerTempHost(host: HostDevice) {
+        activeHosts.putIfAbsent(host.ip, host)
+    }
 
+    /**
+     * Store a device in the database
+     */
+    fun createStoredHost(ip: String, default: StoredHostDevice): HostDevice {
         val host = DatabaseManager.transaction {
-            var host = HostTable.select { HostTable.address.eq(ip) }.firstOrNull()?.let { ProtoBuf.decodeFromByteArray<StoredHostDevice>(it[HostTable.device]) }
-            if (host == null) {
-                host = default
-                HostTable.insert {
-                    it[HostTable.address] = ip
-                    it[HostTable.device] = ProtoBuf.encodeToByteArray<StoredHostDevice>(host)
-                }
+            HostTable.insert {
+                it[HostTable.address] = ip
+                it[HostTable.device] = ProtoBuf.encodeToByteArray<StoredHostDevice>(default)
             }
-            return@transaction host
         }.get()
 
-        return HostDevice(ip, host.software.map { SoftwareRegistry.get(it) }, host.money, host.files).also {
+        return HostDevice(ip, listOf(), default.software.map(SoftwareRegistry::get), default.money, default.files).also {
             // Set as active host
             activeHosts[ip] = it
         }
+    }
+
+    /**
+     * Load a host from the database
+     */
+    fun loadOrCreateStoredHost(ip: String, default: StoredHostDevice): HostDevice {
+        return activeHosts.getOrPut(ip) { createStoredHost(ip, default) }
     }
 }

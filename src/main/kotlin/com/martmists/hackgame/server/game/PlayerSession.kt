@@ -19,7 +19,6 @@ import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import java.lang.Exception
 import java.util.*
 
 class PlayerSession(val connection: ServerConnection) {
@@ -62,8 +61,9 @@ class PlayerSession(val connection: ServerConnection) {
             account = foundAccount
         }
 
-        val host = HostManager.loadOrCreateHost(account.homeIP, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
-        connectChain.add(host)
+        val host = HostManager.loadOrCreateStoredHost(account.homeIP, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
+        connectChain.push(host)
+        // TODO: HostConnectS2C packet
         currentIP = account.homeIP
         isLoggedIn = true
     }
@@ -75,9 +75,11 @@ class PlayerSession(val connection: ServerConnection) {
     }
 
     fun connectTo(remoteIp: String) {
-        // TODO:
-        // Check if IP exists
-        // Check if IP allows login
-        // Set current connected IP
+        // TODO: Check if IP allows login
+        if (HostManager.activeHosts.containsKey(remoteIp)) {
+            currentIP = remoteIp
+            connectChain.push(HostManager.activeHosts[remoteIp]!!)
+            // TODO: HostConnectS2C packet
+        }
     }
 }
