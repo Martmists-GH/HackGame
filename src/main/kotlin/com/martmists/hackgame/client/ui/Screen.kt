@@ -73,7 +73,7 @@ object Screen {
                 )
                 log.layoutManager = GridLayout(1)
                 log.preferredSize = TerminalSize((width / 10.0 * 7).toInt(), height - 6)
-                logText = ReadOnlyTextBox(log.preferredSize, "Sample \u001b[48;2;255;0;0mText\u001b[0m").also {
+                logText = ReadOnlyTextBox(log.preferredSize, "Sample Text").also {
                     it.layoutData = GridLayout.createLayoutData(
                             GridLayout.Alignment.FILL,
                             GridLayout.Alignment.FILL,
@@ -121,7 +121,7 @@ object Screen {
                 )
                 info.layoutManager = GridLayout(1)
                 info.preferredSize = TerminalSize((width / 10.0 * 3).toInt(), ((height - 6.0) / 3).toInt())
-                infoText = ReadOnlyTextBox(info.preferredSize, "Connected to: localhost").also {
+                infoText = ReadOnlyTextBox(info.preferredSize, "Not Connected.").also {
                     it.layoutData = GridLayout.createLayoutData(
                             GridLayout.Alignment.FILL,
                             GridLayout.Alignment.FILL,

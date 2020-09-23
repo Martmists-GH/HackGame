@@ -9,9 +9,10 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.transaction as dbTransaction
-import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.function.Consumer
+import java.util.function.Function
 import kotlin.concurrent.thread
 
 object DatabaseManager {
@@ -30,9 +31,9 @@ object DatabaseManager {
         while (running) {
 
             val pair = queue.poll()
+            Thread.sleep(50)  // 50ms to not lag thread
 
             if (pair == null) {
-                Thread.sleep(20)  // 20ms to not lag thread
                 continue
             }
 
@@ -56,6 +57,8 @@ object DatabaseManager {
         }
     }
 
+    fun <T> transaction(callback: Function<Transaction, T>) = transaction(callback::apply)
+    fun <T> transaction(callback: Consumer<Transaction>) = transaction(callback::accept)
     fun <T> transaction(callback: Transaction.() -> T): CompletableFuture<T> {
         val fut = CompletableFuture<T>()
         queue.add(Pair(fut as CompletableFuture<Any>, callback as Transaction.() -> Any))

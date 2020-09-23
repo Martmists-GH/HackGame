@@ -2,6 +2,7 @@ package com.martmists.hackgame.server
 
 import com.martmists.hackgame.common.packets.DisconnectPacket
 import com.martmists.hackgame.common.packets.FeedbackPacket
+import com.martmists.hackgame.common.packets.HostDisconnectPacket
 import com.martmists.hackgame.common.registry.BuiltinPackets
 import com.martmists.hackgame.server.entities.CommandBuilder
 import com.martmists.hackgame.server.entities.ServerCommandSource
@@ -28,11 +29,11 @@ object ServerCommands {
             command("disconnect") {
                 executes {
                     if (it.source.currentHost == it.source.ownHost) {
-                        // TODO: ERROR
+                        BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("ERROR: Cannot disconnect from root"), it.source.connection)
                     } else {
-                        it.source.session.connectChain.pop()
+                        val last = it.source.session.connectChain.pop()
                         it.source.session.currentIP = it.source.currentHost.ip
-                        // TODO: HostDisconnectS2C packet
+                        BuiltinPackets.HOST_DISCONNECT_S2C.send(HostDisconnectPacket(it.source.currentHost.ip, last.ip), it.source.connection)
                     }
                 }
             }

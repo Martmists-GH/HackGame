@@ -30,6 +30,7 @@ class Client {
 
     lateinit var connection: ClientConnection
     var terminal = false
+    var hideIPs = false
 
     val host = "localhost"
     val port = 1337
@@ -41,9 +42,11 @@ class Client {
 
     fun run(args: Array<String>) {
         val parser = ArgParser("hackgame client")
+        val hideIP by parser.option(ArgType.Boolean, description = "Hide currently connected IP.").default(false)
         val mode by parser.argument(ArgType.Choice<Mode>(), description = "Toggle between terminal mode and gui mode").optional().default(Mode.GUI)
         parser.parse(args)
 
+        hideIPs = hideIP
         terminal = mode == Mode.CLI
         if (terminal)
             LOGGER = NullLogger("HackGame-Client")

@@ -3,6 +3,7 @@ package com.martmists.hackgame.client
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton
 import com.martmists.hackgame.client.ui.Screen
+import com.martmists.hackgame.common.ext.setLine
 import com.martmists.hackgame.common.packets.PingPacket
 import com.martmists.hackgame.common.registry.BuiltinPackets
 import kotlin.concurrent.thread
@@ -37,6 +38,14 @@ object ClientPacketCallbacks {
 
         BuiltinPackets.FEEDBACK_S2C.handler { packet, context ->
             Screen.logText.addLine(packet.msg)
+        }
+
+        BuiltinPackets.HOST_CONNECT_S2C.handler { packet, context ->
+            Screen.infoText.setLine(0, "Connected to: ${if (Client.INSTANCE.hideIPs) "[REDACTED]" else packet.host}")
+        }
+
+        BuiltinPackets.HOST_DISCONNECT_S2C.handler { packet, context ->
+            Screen.infoText.setLine(0, "Connected to: ${if (Client.INSTANCE.hideIPs) "[REDACTED]" else packet.current}")
         }
     }
 

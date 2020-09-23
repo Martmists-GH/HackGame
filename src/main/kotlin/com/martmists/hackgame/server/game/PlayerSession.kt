@@ -1,9 +1,7 @@
 package com.martmists.hackgame.server.game
 
 import com.martmists.hackgame.common.DisconnectException
-import com.martmists.hackgame.common.packets.CommandPacket
-import com.martmists.hackgame.common.packets.DisconnectPacket
-import com.martmists.hackgame.common.packets.LoginPacket
+import com.martmists.hackgame.common.packets.*
 import com.martmists.hackgame.common.registry.BuiltinPackets
 import com.martmists.hackgame.server.Server
 import com.martmists.hackgame.server.database.DatabaseManager
@@ -37,21 +35,24 @@ class PlayerSession(val connection: ServerConnection) {
         if (packet.register) {
             val address = HostManager.getRandomAvailableIp()
 
-            DatabaseManager.transaction {
-                HostTable.insert {
-                    it[HostTable.address] = address
-                    it[HostTable.device] = ProtoBuf.encodeToByteArray<StoredHostDevice>(StoredHostDevice(0, listOf(), VFSDirectory.empty()))
-                }
+            val foundAccounts = DatabaseManager.transaction {
+                AccountTable.select { AccountTable.username eq packet.name }.map { it[AccountTable.username] }
+            }.get()
 
+            if (foundAccounts.isNotEmpty()) {
+                BuiltinPackets.DISCONNECT_S2C.send(DisconnectPacket("Invalid login.", true), connection)
+                throw DisconnectException()
+            }
+
+            HostManager.createStoredHost(address, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
+
+            DatabaseManager.transaction {
                 AccountTable.insert {
                     it[AccountTable.username] = packet.name
                     it[AccountTable.passwordHash] = Bcrypt.hash(packet.password, 10)
                     it[AccountTable.homeAddress] = address
                 }
-            }.exceptionally {
-                BuiltinPackets.DISCONNECT_S2C.send(DisconnectPacket("Invalid login.", true), connection)
-                null
-            }.get() ?: run { throw DisconnectException() }
+            }
 
             account = StoredAccount(packet.name, address)
         } else {
@@ -69,7 +70,7 @@ class PlayerSession(val connection: ServerConnection) {
 
         val host = HostManager.loadOrCreateStoredHost(account.homeIP, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
         connectChain.push(host)
-        // TODO: HostConnectS2C packet
+        BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(account.homeIP), connection)
         currentIP = account.homeIP
         isLoggedIn = true
     }
@@ -81,11 +82,17 @@ class PlayerSession(val connection: ServerConnection) {
     }
 
     fun connectTo(remoteIp: String) {
-        // TODO: Check if IP allows login
+        // TODO: Check if IP allows login or something idk
         if (HostManager.activeHosts.containsKey(remoteIp)) {
+            if (connectChain.firstElement().ip == remoteIp) {
+                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("ERROR: Cannot connect to root host"), connection)
+                return
+            }
             currentIP = remoteIp
             connectChain.push(HostManager.activeHosts[remoteIp]!!)
-            // TODO: HostConnectS2C packet
+            BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(account.homeIP), connection)
+        } else {
+            BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("ERROR: No such host: $remoteIp"), connection)
         }
     }
 }
