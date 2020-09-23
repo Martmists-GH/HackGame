@@ -24,10 +24,16 @@ import java.util.*
 class PlayerSession(val connection: ServerConnection) {
     var isLoggedIn = false
     val connectChain = Stack<HostDevice>()
-    lateinit var currentIP: String
-    lateinit var account: StoredAccount
+    var currentIP = ""
+    var account = StoredAccount(" ", "")
 
     fun onLoginPacket(packet: LoginPacket) {
+        if (Server.INSTANCE.connected.any { it.session.account.name == packet.name }) {
+            // Already logged in
+            BuiltinPackets.DISCONNECT_S2C.send(DisconnectPacket("User already logged in on different connection", true), connection)
+            throw DisconnectException()
+        }
+
         if (packet.register) {
             val address = HostManager.getRandomAvailableIp()
 
