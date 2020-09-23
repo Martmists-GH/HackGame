@@ -4,6 +4,7 @@ import com.martmists.hackgame.common.packets.DisconnectPacket
 import com.martmists.hackgame.common.packets.FeedbackPacket
 import com.martmists.hackgame.common.packets.HostDisconnectPacket
 import com.martmists.hackgame.common.registry.BuiltinPackets
+import com.martmists.hackgame.server.database.dataholders.vfs.VFSDirectory
 import com.martmists.hackgame.server.entities.CommandBuilder
 import com.martmists.hackgame.server.entities.ServerCommandSource
 import com.mojang.brigadier.CommandDispatcher
@@ -15,6 +16,31 @@ object ServerCommands {
             command("money") {
                 executes {
                     BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${it.source.currentHost.money}$"), it.source.connection)
+                }
+            }
+
+            command("ls", "dir") {
+                executes {
+                    // TODO: Better tree command
+
+                    val tree = StringBuilder().apply {
+                        fun iterDir(dir: VFSDirectory, indent: Int) {
+                            append(" ".repeat(indent))
+                            append(dir.name)
+                            append("\n")
+                            for (f in dir.files) {
+                                append(" ".repeat(indent + 2))
+                                append(f.filename)
+                                append("\n")
+                            }
+                            for (d in dir.directories) {
+                                iterDir(d, indent + 2)
+                            }
+                        }
+
+                        iterDir(it.source.currentHost.filesystem, 0)
+                    }.toString()
+                    BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket(tree), it.source.connection)
                 }
             }
 

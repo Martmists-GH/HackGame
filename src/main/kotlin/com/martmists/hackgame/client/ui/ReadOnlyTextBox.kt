@@ -17,6 +17,16 @@ class ReadOnlyTextBox(preferredSize: TerminalSize, initialContent: String, style
     override fun isFocusable() = true
     override fun handleKeyStroke(keyStroke: KeyStroke) = Interactable.Result.UNHANDLED
 
+    override fun addLine(line: String): TextBox {
+        for (seg in line.split("\n")) {
+            super.addLine(seg)
+            scrollDown()
+        }
+        return this
+    }
+
+
+    // TODO: These do not currently work
     fun scrollDown() {
         caretPosition.withColumn(caretPosition.column + 1)
     }

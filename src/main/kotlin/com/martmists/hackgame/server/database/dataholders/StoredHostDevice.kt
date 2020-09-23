@@ -4,8 +4,8 @@ import com.martmists.hackgame.server.database.dataholders.vfs.VFSDirectory
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class StoredHostDevice(
+data class StoredHostDevice @JvmOverloads constructor(
         val money: Int,
-        val software: List<String>,
+        val software: List<String> = emptyList(),
         val files: VFSDirectory
 )

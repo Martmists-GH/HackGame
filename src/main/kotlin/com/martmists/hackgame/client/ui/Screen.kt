@@ -167,7 +167,6 @@ object Screen {
                     )
                     it.callback = callback@{ cmd ->
                         logText.addLine("> $cmd")
-                        logText.setCaretPosition(logText.caretPosition.column, logText.caretPosition.row+1)
                         BuiltinPackets.COMMAND_C2S.send(CommandPacket(cmd), Client.INSTANCE.connection)
                     }
                     input.addComponent(it)

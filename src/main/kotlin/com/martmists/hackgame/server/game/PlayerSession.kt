@@ -8,6 +8,7 @@ import com.martmists.hackgame.server.database.DatabaseManager
 import com.martmists.hackgame.server.database.dataholders.StoredAccount
 import com.martmists.hackgame.server.database.dataholders.StoredHostDevice
 import com.martmists.hackgame.server.database.dataholders.vfs.VFSDirectory
+import com.martmists.hackgame.server.database.dataholders.vfs.VFSFile
 import com.martmists.hackgame.server.database.tables.AccountTable
 import com.martmists.hackgame.server.database.tables.HostTable
 import com.martmists.hackgame.server.entities.ServerCommandSource
@@ -70,6 +71,8 @@ class PlayerSession(val connection: ServerConnection) {
 
         val host = HostManager.loadOrCreateStoredHost(account.homeIP, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
         connectChain.push(host)
+        host.filesystem.directories = listOf(VFSDirectory("test", listOf(), listOf(VFSFile("hi", "hello"))), VFSDirectory("logs"))
+        host.filesystem.files = listOf(VFSFile("test", "yay"))
         BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(account.homeIP), connection)
         currentIP = account.homeIP
         isLoggedIn = true
