@@ -70,6 +70,22 @@ object ServerCommands {
                     it.source.connection.close()
                 }
             }
+
+            command("help") {
+                executes {
+                    val commands = dispatcher.root.children.joinToString("\n") { c -> "- ${c.name}" }
+                    BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("Commands:\n$commands"), it.source.connection)
+                }
+
+                argument("cmd", StringArgumentType.string()) {
+                    executes {
+                        val command = dispatcher.root.getChild(StringArgumentType.getString(it, "cmd")) ?: null
+                        // TODO:
+                        // Error message if command is null
+                        // Command usage if command is not null
+                    }
+                }
+            }
         }
     }
 }
