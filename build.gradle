@@ -1,8 +1,8 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version"
-    id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlin_version"
+    id "org.jetbrains.kotlin.jvm" version "$kotlin_version"
+    id "org.jetbrains.kotlin.plugin.serialization" version "$kotlin_version"
     id "com.github.johnrengelman.shadow" version "5.2.0"
 }
 
@@ -56,23 +56,23 @@ dependencies {
     serverRuntime "org.postgresql:postgresql:42.2.2"
 
     // === LOADER ===
-    common 'org.ow2.asm:asm:7.3.1'
-    common 'org.ow2.asm:asm-analysis:7.3.1'
-    common 'org.ow2.asm:asm-commons:7.3.1'
-    common 'org.ow2.asm:asm-tree:7.3.1'
-    common 'org.ow2.asm:asm-util:7.3.1'
-    common 'net.fabricmc:sponge-mixin:0.8+build.18'
-    common 'com.google.jimfs:jimfs:1.1'
-    common 'net.fabricmc:fabric-loader-sat4j:2.3.5.4'
-    common 'net.fabricmc:tiny-mappings-parser:0.2.2.14'
-    common 'net.fabricmc:tiny-remapper:0.2.2.64'
-    common ('net.minecraft:launchwrapper:1.12') {
+    common "org.ow2.asm:asm:7.3.1"
+    common "org.ow2.asm:asm-analysis:7.3.1"
+    common "org.ow2.asm:asm-commons:7.3.1"
+    common "org.ow2.asm:asm-tree:7.3.1"
+    common "org.ow2.asm:asm-util:7.3.1"
+    common "net.fabricmc:sponge-mixin:0.8+build.18"
+    common "com.google.jimfs:jimfs:1.1"
+    common "net.fabricmc:fabric-loader-sat4j:2.3.5.4"
+    common "net.fabricmc:tiny-mappings-parser:0.2.2.14"
+    common "net.fabricmc:tiny-remapper:0.2.2.64"
+    common ("net.minecraft:launchwrapper:1.12") {
         transitive = false
     }
-    common 'net.sf.jopt-simple:jopt-simple:5.0.3'
-    common 'org.apache.logging.log4j:log4j-api:2.13.0'
-    commonRuntime 'org.apache.logging.log4j:log4j-to-slf4j:2.13.0'
-    common 'com.google.code.gson:gson:2.8.6'
+    common "net.sf.jopt-simple:jopt-simple:5.0.3"
+    common "org.apache.logging.log4j:log4j-api:2.13.0"
+    commonRuntime "org.apache.logging.log4j:log4j-to-slf4j:2.13.0"
+    common "com.google.code.gson:gson:2.8.6"
 }
 
 repositories {
@@ -87,12 +87,12 @@ repositories {
         url = "https://libraries.minecraft.net"
     }
     maven {
-        name = 'Fabric'
-        url = 'http://maven.modmuss50.me/'
+        name = "Fabric"
+        url = "http://maven.modmuss50.me/"
     }
     maven {
-        name = 'SpongePowered'
-        url = 'http://repo.spongepowered.org/maven'
+        name = "SpongePowered"
+        url = "http://repo.spongepowered.org/maven"
     }
     maven {
         name = "Jitpack"
