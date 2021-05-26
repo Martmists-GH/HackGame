@@ -166,7 +166,7 @@ object Screen {
                             1,
                             1
                     )
-                    it.callback = callback@{ cmd ->
+                    it.callback = { cmd ->
                         logText.addLine("> $cmd")
                         BuiltinPackets.COMMAND_C2S.send(CommandPacket(cmd), Client.INSTANCE.connection)
                     }

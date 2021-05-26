@@ -14,6 +14,10 @@ class ReadOnlyTextBox(preferredSize: TerminalSize, initialContent: String, style
     constructor(size: TerminalSize) : this(size, "", Style.MULTI_LINE)
     constructor(size: TerminalSize, content: String) : this(size, content, Style.MULTI_LINE)
 
+    override fun onBeforeDrawing() {
+        super.onBeforeDrawing()
+    }
+
     override fun isFocusable() = false
     override fun handleKeyStroke(keyStroke: KeyStroke) = Interactable.Result.UNHANDLED
 

@@ -51,7 +51,7 @@ object HostManager {
         val host = DatabaseManager.transaction {
             HostTable.insert {
                 it[HostTable.address] = ip
-                it[HostTable.device] = ProtoBuf.encodeToByteArray<StoredHostDevice>(default)
+                it[HostTable.device] = ProtoBuf.encodeToByteArray(default)
             }
         }.get()
 

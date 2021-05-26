@@ -61,6 +61,7 @@ class Client {
             reconnect(host, port)
         }
         Screen.start()
+        Screen.screen.stopScreen()
         // Screen exited
         connection.close()
     }

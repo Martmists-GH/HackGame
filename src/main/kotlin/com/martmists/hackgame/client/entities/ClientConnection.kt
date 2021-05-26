@@ -29,9 +29,6 @@ class ClientConnection(override val socket: Socket) : Connection() {
         // Initial ping
         BuiltinPackets.PING_C2S.send(PingPacket(0, 0), this)
 
-        // TODO: Input dialog
-
-
         while (connected && socket.isConnected) {
             try {
                 val buf = readPacket()

@@ -10,7 +10,9 @@ import org.slf4j.Logger
 import java.io.*
 import java.net.Socket
 import java.nio.ByteBuffer
+import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.LinkedBlockingQueue
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
@@ -21,19 +23,15 @@ abstract class Connection {
     abstract val logger: Logger
     abstract var connected: Boolean
 
-    private val packetQueue = ConcurrentLinkedQueue<ByteArray>()
+    private val packetQueue = LinkedBlockingQueue<ByteArray>()
+    private var flush = false
 
     fun runWriteThread() = thread(start=true, isDaemon=true, name="Packet Send Thread") {
-
-        while (connected && socket.isConnected) {
-            if (packetQueue.isNotEmpty()) {
-                val packet = packetQueue.remove()
-                writer.write(ByteBuffer.allocate(4).putInt(packet.size).array())
-                writer.write(packet)
-                writer.flush()
-            } else {
-                Thread.sleep(100)
-            }
+        while ((connected && socket.isConnected) || flush) {
+            val packet = packetQueue.take()
+            writer.write(ByteBuffer.allocate(4).putInt(packet.size).array())
+            writer.write(packet)
+            writer.flush()
         }
     }
 
@@ -61,5 +59,6 @@ abstract class Connection {
 
     open fun close() {
         connected = false
+        flush = true
     }
 }
