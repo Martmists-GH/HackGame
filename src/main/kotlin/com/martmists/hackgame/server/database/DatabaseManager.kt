@@ -1,19 +1,19 @@
 package com.martmists.hackgame.server.database
 
-import com.google.common.collect.Queues
 import com.martmists.hackgame.server.Server
 import com.martmists.hackgame.server.database.tables.AccountTable
 import com.martmists.hackgame.server.database.tables.HostTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.transactions.transaction as dbTransaction
+import java.util.concurrent.BlockingQueue
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.function.Consumer
 import java.util.function.Function
 import kotlin.concurrent.thread
+import org.jetbrains.exposed.sql.transactions.transaction as dbTransaction
 
 object DatabaseManager {
     val dbUser = System.getProperty("hackgame.database.username", "hackgame")
@@ -24,18 +24,12 @@ object DatabaseManager {
 
     @Volatile
     var running = true
-    val queue = ConcurrentLinkedQueue<Pair<CompletableFuture<Any>, Transaction.() -> Any>>()
+    val queue = LinkedBlockingQueue<Pair<CompletableFuture<Any>, Transaction.() -> Any>>()
 
     val database = Database.connect("jdbc:postgresql://$dbHost:$dbPort/$dbName", driver="org.postgresql.Driver", user=dbUser, password=dbPassword)
     val dbThread = thread(start=true, isDaemon=true, name="HackGame Database Thread") {
         while (running) {
-
-            val pair = queue.poll()
-            Thread.sleep(50)  // 50ms to not lag thread
-
-            if (pair == null) {
-                continue
-            }
+            val pair = queue.take()
 
             try {
                 val value = dbTransaction(database) {  // Renamed because recursion

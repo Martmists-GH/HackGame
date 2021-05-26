@@ -13,6 +13,7 @@ import com.martmists.hackgame.common.packets.LoginPacket
 import com.martmists.hackgame.common.registry.BuiltinPackets
 import java.lang.NullPointerException
 import java.util.regex.Pattern
+import kotlin.math.floor
 import kotlin.system.exitProcess
 
 object Screen {
@@ -72,7 +73,7 @@ object Screen {
                         2
                 )
                 log.layoutManager = GridLayout(1)
-                log.preferredSize = TerminalSize((width / 10.0 * 7).toInt(), height - 6)
+                log.preferredSize = TerminalSize(floor(width / 10.0 * 7).toInt(), height - 6)
                 logText = ReadOnlyTextBox(log.preferredSize, "Sample Text").also {
                     it.layoutData = GridLayout.createLayoutData(
                             GridLayout.Alignment.FILL,
@@ -96,7 +97,7 @@ object Screen {
                         1
                 )
                 chat.layoutManager = GridLayout(1)
-                chat.preferredSize = TerminalSize((width / 10.0 * 3).toInt(), ((height - 6.0) / 3 * 2).toInt())
+                chat.preferredSize = TerminalSize(floor(width / 10.0 * 3).toInt(), floor((height - 6.0) / 3 * 2).toInt())
                 chatText = ReadOnlyTextBox(chat.preferredSize, "User1 > Hi!").also {
                     it.layoutData = GridLayout.createLayoutData(
                             GridLayout.Alignment.FILL,
@@ -120,7 +121,7 @@ object Screen {
                         1
                 )
                 info.layoutManager = GridLayout(1)
-                info.preferredSize = TerminalSize((width / 10.0 * 3).toInt(), ((height - 6.0) / 3).toInt())
+                info.preferredSize = TerminalSize(floor(width / 10.0 * 3).toInt(), floor((height - 6.0) / 3).toInt())
                 infoText = ReadOnlyTextBox(info.preferredSize, "Not Connected.").also {
                     it.layoutData = GridLayout.createLayoutData(
                             GridLayout.Alignment.FILL,
@@ -201,6 +202,7 @@ object Screen {
                 root.addComponent(it)
             }
             val passwordInput = TextBox().also { input ->
+                input.mask = '*'
                 root.addComponent(input)
             }
 

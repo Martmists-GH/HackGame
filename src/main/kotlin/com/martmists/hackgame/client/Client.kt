@@ -8,9 +8,6 @@ import com.martmists.hackgame.client.ui.Screen
 import kotlinx.cli.*
 import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointClient
 import org.slf4j.LoggerFactory
-import org.slf4j.impl.SimpleLogger
-import java.io.OutputStream
-import java.io.PrintStream
 import java.net.ConnectException
 import java.net.Socket
 import kotlin.concurrent.thread

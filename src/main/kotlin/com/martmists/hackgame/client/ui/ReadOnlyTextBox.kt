@@ -10,11 +10,11 @@ class ReadOnlyTextBox(preferredSize: TerminalSize, initialContent: String, style
         this.isReadOnly = true
     }
 
-    constructor() : this(TerminalSize(10, 1), "", Style.SINGLE_LINE)
-    constructor(size: TerminalSize) : this(size, "", Style.SINGLE_LINE)
-    constructor(size: TerminalSize, content: String) : this(size, content, Style.SINGLE_LINE)
+    constructor() : this(TerminalSize(100, 100), "", Style.MULTI_LINE)
+    constructor(size: TerminalSize) : this(size, "", Style.MULTI_LINE)
+    constructor(size: TerminalSize, content: String) : this(size, content, Style.MULTI_LINE)
 
-    override fun isFocusable() = true
+    override fun isFocusable() = false
     override fun handleKeyStroke(keyStroke: KeyStroke) = Interactable.Result.UNHANDLED
 
     override fun addLine(line: String): TextBox {
@@ -25,13 +25,11 @@ class ReadOnlyTextBox(preferredSize: TerminalSize, initialContent: String, style
         return this
     }
 
-
-    // TODO: These do not currently work
     fun scrollDown() {
-        caretPosition.withColumn(caretPosition.column + 1)
+        setCaretPosition(Int.MAX_VALUE, 0)
     }
 
     fun scrollUp() {
-        caretPosition.withColumn((caretPosition.column - 1).coerceAtLeast(0))
+        setCaretPosition(0, 0)
     }
 }
