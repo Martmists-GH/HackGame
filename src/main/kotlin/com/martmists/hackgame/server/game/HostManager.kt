@@ -44,6 +44,10 @@ object HostManager {
         activeHosts.putIfAbsent(host.ip, host)
     }
 
+    fun removeTempHost(ip: String) {
+        activeHosts.remove(ip)
+    }
+
     /**
      * Store a device in the database
      */

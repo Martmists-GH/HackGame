@@ -9,4 +9,10 @@ open class HostDevice(
         var software: List<Software>,
         var money: Int,
         val filesystem: VFSDirectory
-)
+) {
+    fun logConnection(sourceIP: String) {
+        val dir = filesystem.getOrCreateDir("logs")
+        val file = dir.getOrCreateFile("access.log")
+        file.contents += "Received log-in from $sourceIP"
+    }
+}

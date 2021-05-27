@@ -71,8 +71,6 @@ class PlayerSession(val connection: ServerConnection) {
 
         val host = HostManager.loadOrCreateStoredHost(account.homeIP, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
         connectChain.push(host)
-        host.filesystem.directories = listOf(VFSDirectory("test", listOf(), listOf(VFSFile("hi", "hello"))), VFSDirectory("logs"))
-        host.filesystem.files = listOf(VFSFile("test", "yay"))
         BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(account.homeIP), connection)
         currentIP = account.homeIP
         isLoggedIn = true
@@ -93,7 +91,8 @@ class PlayerSession(val connection: ServerConnection) {
             }
             currentIP = remoteIp
             connectChain.push(HostManager.activeHosts[remoteIp]!!)
-            BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(account.homeIP), connection)
+            HostManager.activeHosts[remoteIp]!!.logConnection(currentIP)
+            BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(remoteIp), connection)
         } else {
             BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("ERROR: No such host: $remoteIp"), connection)
         }

@@ -66,7 +66,7 @@ class Client {
         connection.close()
     }
 
-    tailrec fun reconnect(remote: String, port: Int) {
+    fun reconnect(remote: String, port: Int) {
         val socket: Socket
         try {
             socket = Socket(remote, port)

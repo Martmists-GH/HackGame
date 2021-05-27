@@ -74,7 +74,7 @@ object Screen {
                 )
                 log.layoutManager = GridLayout(1)
                 log.preferredSize = TerminalSize(floor(width / 10.0 * 7).toInt(), height - 6)
-                logText = ReadOnlyTextBox(log.preferredSize, "Sample Text").also {
+                logText = ReadOnlyTextBox(log.preferredSize).also {
                     it.layoutData = GridLayout.createLayoutData(
                             GridLayout.Alignment.FILL,
                             GridLayout.Alignment.FILL,
@@ -98,7 +98,7 @@ object Screen {
                 )
                 chat.layoutManager = GridLayout(1)
                 chat.preferredSize = TerminalSize(floor(width / 10.0 * 3).toInt(), floor((height - 6.0) / 3 * 2).toInt())
-                chatText = ReadOnlyTextBox(chat.preferredSize, "User1 > Hi!").also {
+                chatText = ReadOnlyTextBox(chat.preferredSize).also {
                     it.layoutData = GridLayout.createLayoutData(
                             GridLayout.Alignment.FILL,
                             GridLayout.Alignment.FILL,
@@ -122,7 +122,8 @@ object Screen {
                 )
                 info.layoutManager = GridLayout(1)
                 info.preferredSize = TerminalSize(floor(width / 10.0 * 3).toInt(), floor((height - 6.0) / 3).toInt())
-                infoText = ReadOnlyTextBox(info.preferredSize, "Not Connected.").also {
+                infoText = ReadOnlyTextBox(info.preferredSize).also {
+                    it.addText("Not Connected.")
                     it.layoutData = GridLayout.createLayoutData(
                             GridLayout.Alignment.FILL,
                             GridLayout.Alignment.FILL,
@@ -167,7 +168,7 @@ object Screen {
                             1
                     )
                     it.callback = { cmd ->
-                        logText.addLine("> $cmd")
+                        logText.addText("> $cmd")
                         BuiltinPackets.COMMAND_C2S.send(CommandPacket(cmd), Client.INSTANCE.connection)
                     }
                     input.addComponent(it)

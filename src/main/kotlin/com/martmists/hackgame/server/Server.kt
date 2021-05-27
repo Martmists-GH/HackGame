@@ -4,6 +4,7 @@ import com.martmists.hackgame.server.database.DatabaseManager
 import com.martmists.hackgame.server.entities.ServerCommandSource
 import com.martmists.hackgame.server.entities.ServerConnection
 import com.martmists.hackgame.server.game.HostManager
+import com.martmists.hackgame.server.game.PersistNPC
 import com.mojang.brigadier.CommandDispatcher
 import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointServer
 import org.slf4j.LoggerFactory
@@ -38,6 +39,7 @@ class Server {
         ServerPacketCallbacks.initialize()
         DatabaseManager.registerDefaultTables()
         HostManager.loadStoredHosts()
+        PersistNPC.load()
 
         LOGGER.info("Starting Server")
 
