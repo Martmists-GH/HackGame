@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class GameProviders {
-	private static List<GameProvider> providers = new ArrayList();
+	private static final List<GameProvider> providers = new ArrayList<>();
 
 	private GameProviders() { }
 

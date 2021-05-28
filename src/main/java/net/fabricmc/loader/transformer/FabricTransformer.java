@@ -16,15 +16,14 @@
 
 package net.fabricmc.loader.transformer;
 
+import net.fabricmc.accesswidener.AccessWidenerVisitor;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.FabricLoader;
 import net.fabricmc.loader.game.MinecraftGameProvider;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
-import net.fabricmc.loader.transformer.accesswidener.AccessWidenerVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
 
 public final class FabricTransformer {
 	public static byte[] lwTransformerHook(String name, String transformedName, byte[] bytes) {
@@ -60,23 +59,23 @@ public final class FabricTransformer {
 		int visitorCount = 0;
 
 		if (applyAccessWidener) {
-			visitor = new AccessWidenerVisitor(Opcodes.ASM8, visitor, FabricLoader.INSTANCE.getAccessWidener());
+			visitor = AccessWidenerVisitor.createClassVisitor(FabricLoader.ASM_VERSION, visitor, FabricLoader.INSTANCE.getAccessWidener());
 			visitorCount++;
 		}
 
 		if (transformAccess) {
-			visitor = new PackageAccessFixer(Opcodes.ASM8, visitor);
+			visitor = new PackageAccessFixer(FabricLoader.ASM_VERSION, visitor);
 			visitorCount++;
 		}
 
 		if (environmentStrip) {
-			EnvironmentStrippingData stripData = new EnvironmentStrippingData(Opcodes.ASM8, envType.toString());
+			EnvironmentStrippingData stripData = new EnvironmentStrippingData(FabricLoader.ASM_VERSION, envType.toString());
 			classReader.accept(stripData, ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
 			if (stripData.stripEntireClass()) {
 				throw new RuntimeException("Cannot load class " + name + " in environment type " + envType);
 			}
 			if (!stripData.isEmpty()) {
-				visitor = new ClassStripper(Opcodes.ASM8, visitor, stripData.getStripInterfaces(), stripData.getStripFields(), stripData.getStripMethods());
+				visitor = new ClassStripper(FabricLoader.ASM_VERSION, visitor, stripData.getStripInterfaces(), stripData.getStripFields(), stripData.getStripMethods());
 				visitorCount++;
 			}
 		}

@@ -25,6 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import net.fabricmc.loader.FabricLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -33,8 +35,9 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import com.google.gson.stream.JsonReader;
-
+import net.fabricmc.loader.lib.gson.JsonReader;
+import net.fabricmc.loader.lib.gson.JsonToken;
+import net.fabricmc.loader.metadata.ParseMetadataException;
 import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.version.SemanticVersionImpl;
 import net.fabricmc.loader.util.version.SemanticVersionPredicateParser;
@@ -60,6 +63,10 @@ public final class McVersionLookup {
 	private static final Pattern ALPHA_PATTERN = Pattern.compile("(?:a|Alpha v?)1\\.(\\d+(\\.\\d+)?[a-z]?(_\\d+)?[a-z]?)");
 	private static final Pattern INDEV_PATTERN = Pattern.compile("(?:inf-|Inf?dev )(?:0\\.31 )?(\\d+(-\\d+)?)");
 	private static final String STRING_DESC = "Ljava/lang/String;";
+
+	public static McVersion getVersion(String version) {
+		return new McVersion(version, getRelease(version));
+	}
 
 	public static McVersion getVersion(Path gameJar) {
 		McVersion ret;
@@ -113,7 +120,7 @@ public final class McVersionLookup {
 	}
 
 	private static McVersion fromVersionJson(InputStream is) {
-		try (JsonReader reader = new JsonReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+		try(JsonReader reader = new JsonReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 			String id = null;
 			String name = null;
 			String release = null;
@@ -122,10 +129,33 @@ public final class McVersionLookup {
 
 			while (reader.hasNext()) {
 				switch (reader.nextName()) {
-				case "id": id = reader.nextString(); break;
-				case "name": name = reader.nextString(); break;
-				case "release_target": release = reader.nextString(); break;
-				default: reader.skipValue();
+				case "id":
+					if (reader.peek() != JsonToken.STRING) {
+						// FIXME: Needs its own type?
+						throw new ParseMetadataException("\"id\" in version json must be a string");
+					}
+
+					id = reader.nextString();
+					break;
+				case "name":
+					if (reader.peek() != JsonToken.STRING) {
+						// FIXME: Needs its own type?
+						throw new ParseMetadataException("\"name\" in version json must be a string");
+					}
+
+					name = reader.nextString();
+					break;
+				case "release_target":
+					if (reader.peek() != JsonToken.STRING) {
+						// FIXME: Needs its own type?
+						throw new ParseMetadataException("\"release_target\" in version json must be a string");
+					}
+
+					release = reader.nextString();
+					break;
+				default:
+					// There is typically other stuff in the file, just ignore anything we don't know
+					reader.skipValue();
 				}
 			}
 
@@ -138,7 +168,7 @@ public final class McVersionLookup {
 			}
 
 			if (name != null && release != null) return new McVersion(name, release);
-		} catch (IOException e) {
+		} catch (IOException | ParseMetadataException e) {
 			e.printStackTrace();
 		}
 
@@ -393,7 +423,7 @@ public final class McVersionLookup {
 
 	private static final class FieldStringConstantVisitor extends ClassVisitor implements Analyzer {
 		public FieldStringConstantVisitor(String fieldName) {
-			super(Opcodes.ASM8);
+			super(FabricLoader.ASM_VERSION);
 
 			this.fieldName = fieldName;
 		}
@@ -464,7 +494,7 @@ public final class McVersionLookup {
 
 	private static final class MethodStringConstantContainsVisitor extends ClassVisitor implements Analyzer {
 		public MethodStringConstantContainsVisitor(String methodOwner, String methodName) {
-			super(Opcodes.ASM8);
+			super(FabricLoader.ASM_VERSION);
 
 			this.methodOwner = methodOwner;
 			this.methodName = methodName;
@@ -493,10 +523,10 @@ public final class McVersionLookup {
 				@Override
 				public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean itf) {
 					if (result == null
-						&& lastLdc != null
-						&& owner.equals(methodOwner)
-						&& name.equals(methodName)
-						&& descriptor.startsWith("(" + STRING_DESC + ")")) {
+							&& lastLdc != null
+							&& owner.equals(methodOwner)
+							&& name.equals(methodName)
+							&& descriptor.startsWith("(" + STRING_DESC + ")")) {
 						result = lastLdc;
 					}
 
@@ -519,7 +549,7 @@ public final class McVersionLookup {
 
 	private static final class MethodConstantRetVisitor extends ClassVisitor implements Analyzer {
 		public MethodConstantRetVisitor(String methodName) {
-			super(Opcodes.ASM8);
+			super(FabricLoader.ASM_VERSION);
 
 			this.methodName = methodName;
 		}
@@ -577,7 +607,7 @@ public final class McVersionLookup {
 
 	private static final class MethodConstantVisitor extends ClassVisitor implements Analyzer {
 		public MethodConstantVisitor(String methodNameHint) {
-			super(Opcodes.ASM8);
+			super(FabricLoader.ASM_VERSION);
 
 			this.methodNameHint = methodNameHint;
 		}
@@ -595,7 +625,7 @@ public final class McVersionLookup {
 				return null;
 			}
 
-			return new MethodVisitor(Opcodes.ASM8) {
+			return new MethodVisitor(FabricLoader.ASM_VERSION) {
 				@Override
 				public void visitLdcInsn(Object value) {
 					String str;
@@ -617,7 +647,7 @@ public final class McVersionLookup {
 
 	private static abstract class InsnFwdMethodVisitor extends MethodVisitor {
 		public InsnFwdMethodVisitor() {
-			super(Opcodes.ASM8);
+			super(FabricLoader.ASM_VERSION);
 		}
 
 		protected abstract void visitAnyInsn();
@@ -692,6 +722,11 @@ public final class McVersionLookup {
 		private McVersion(String name, String release) {
 			this.raw = name;
 			this.normalized = normalizeVersion(name, release);
+		}
+
+		@Override
+		public String toString() {
+			return String.format("%s/%s", raw, normalized);
 		}
 
 		public final String raw; // raw version, e.g. 18w12a

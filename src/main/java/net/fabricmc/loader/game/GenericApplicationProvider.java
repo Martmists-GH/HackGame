@@ -110,6 +110,11 @@ public class GenericApplicationProvider implements GameProvider {
     }
 
     @Override
+    public boolean locateGame(EnvType envType, String[] args, ClassLoader loader) {
+        this.arguments = args;
+        return locateGame(envType, loader);
+    }
+
     public boolean locateGame(EnvType envType, ClassLoader loader) {
         List<String> entrypointClasses;
 
@@ -124,11 +129,6 @@ public class GenericApplicationProvider implements GameProvider {
         gameJar = entrypointResult.get().entrypointPath;
 
         return true;
-    }
-
-    @Override
-    public void acceptArguments(String... arguments) {
-        this.arguments = arguments;
     }
 
     @Override
@@ -157,6 +157,11 @@ public class GenericApplicationProvider implements GameProvider {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String[] getLaunchArguments(boolean sanitize) {
+        return new String[0];
     }
 
     @Override

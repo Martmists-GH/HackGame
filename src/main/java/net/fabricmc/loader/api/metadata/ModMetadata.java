@@ -50,6 +50,15 @@ public interface ModMetadata {
 	String getId();
 
 	/**
+	 * Returns the mod's ID provides.
+	 *
+	 * <p>The aliases follow the same rules as ID</p>
+	 *
+	 * @return the mod's ID provides
+	 */
+	Collection<String> getProvides();
+
+	/**
 	 * Returns the mod's version.
 	 */
 	Version getVersion();
@@ -75,12 +84,12 @@ public interface ModMetadata {
 	Collection<ModDependency> getSuggests();
 
 	/**
-	 * Returns the mod's conflicts, with which the Loader will terminate loading.
+	 * Returns the mod's conflicts, with which the Loader will emit a warning.
 	 */
 	Collection<ModDependency> getConflicts();
 
 	/**
-	 * Returns the mod's conflicts, with which the Loader will emit a warning.
+	 * Returns the mod's conflicts, with which the Loader will terminate loading.
 	 */
 	Collection<ModDependency> getBreaks();
 
@@ -145,6 +154,7 @@ public interface ModMetadata {
 	 * @param key the key
 	 * @return the custom value, or {@code null} if no such value is present
 	 */
+	/* @Nullable */
 	CustomValue getCustomValue(String key);
 
 	/**

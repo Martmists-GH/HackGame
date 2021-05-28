@@ -59,6 +59,18 @@ class ActionTextBox(preferredSize: TerminalSize, initialContent: String, style: 
             return Interactable.Result.HANDLED
         }
 
+        if (keyStroke.keyType == KeyType.PageUp) {
+            Screen.infoText.scrollOffset = Screen.infoText.scrollOffset.plus(1).coerceAtMost(Screen.infoText.text.count { it == '\n' });
+            Screen.infoText.addLine("")
+            return Interactable.Result.HANDLED
+        }
+
+        if (keyStroke.keyType == KeyType.PageDown) {
+            Screen.infoText.scrollOffset = Screen.infoText.scrollOffset.minus(1).coerceAtLeast(0);
+            Screen.infoText.addLine("")
+            return Interactable.Result.HANDLED
+        }
+
         return super.handleKeyStroke(keyStroke)
     }
 }

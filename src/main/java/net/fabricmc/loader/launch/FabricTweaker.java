@@ -25,6 +25,7 @@ import net.fabricmc.loader.game.MinecraftGameProvider;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.launch.common.FabricMixinBootstrap;
 import net.fabricmc.loader.util.Arguments;
+import net.fabricmc.loader.util.SystemProperties;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -90,8 +91,8 @@ public abstract class FabricTweaker extends FabricLauncherBase implements ITweak
 
 	@Override
 	public void injectIntoClassLoader(LaunchClassLoader launchClassLoader) {
-		isDevelopment = Boolean.parseBoolean(System.getProperty("fabric.development", "false"));
-		Launch.blackboard.put("fabric.development", isDevelopment);
+		isDevelopment = Boolean.parseBoolean(System.getProperty(SystemProperties.DEVELOPMENT, "false"));
+		Launch.blackboard.put(SystemProperties.DEVELOPMENT, isDevelopment);
 		setProperties(Launch.blackboard);
 
 		this.launchClassLoader = launchClassLoader;
@@ -110,10 +111,9 @@ public abstract class FabricTweaker extends FabricLauncherBase implements ITweak
 
 		GameProvider provider = new MinecraftGameProvider();
 
-		if (!provider.locateGame(getEnvironmentType(), launchClassLoader)) {
+		if (!provider.locateGame(getEnvironmentType(), arguments.toArray(), launchClassLoader)) {
 			throw new RuntimeException("Could not locate Minecraft: provider locate failed");
 		}
-		provider.acceptArguments(arguments.toArray());
 
 		@SuppressWarnings("deprecation")
 		FabricLoader loader = FabricLoader.INSTANCE;
@@ -125,7 +125,7 @@ public abstract class FabricTweaker extends FabricLauncherBase implements ITweak
 
 		if (!isDevelopment) {
 			// Obfuscated environment
-			Launch.blackboard.put("fabric.development", false);
+			Launch.blackboard.put(SystemProperties.DEVELOPMENT, false);
 			try {
 				String target = getLaunchTarget();
 				URL loc = launchClassLoader.findResource(target.replace('.', '/') + ".class");
@@ -145,7 +145,7 @@ public abstract class FabricTweaker extends FabricLauncherBase implements ITweak
 			}
 		}
 
-		FabricLoader.INSTANCE.getAccessWidener().loadFromMods();
+		FabricLoader.INSTANCE.loadAccessWideners();
 
 		MinecraftGameProvider.TRANSFORMER.locateEntrypoints(this);
 
@@ -226,7 +226,7 @@ public abstract class FabricTweaker extends FabricLauncherBase implements ITweak
 		}
 
 		try (FileInputStream jarFileStream = new FileInputStream(remappedJarFile.toFile());
-			 JarInputStream jarStream = new JarInputStream(jarFileStream)) {
+				JarInputStream jarStream = new JarInputStream(jarFileStream)) {
 			JarEntry entry;
 
 			while ((entry = jarStream.getNextJarEntry()) != null) {

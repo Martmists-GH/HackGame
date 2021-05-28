@@ -68,6 +68,7 @@ dependencies {
     common "net.fabricmc:fabric-loader-sat4j:2.3.5.4"
     common "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
     common "net.fabricmc:tiny-remapper:0.3.2"
+    common 'net.fabricmc:access-widener:1.0.0'
     common ("net.minecraft:launchwrapper:1.12") {
         transitive = false
     }
@@ -127,6 +128,7 @@ jar {
 def setManifest(Jar p, String type) {
     p.manifest {
         attributes(
+                "Multi-Release": true,
                 "Main-Class": "com/martmists/hackgame/loader/Main",
                 "Game-Type": type,
                 "Game-Version": project.game_version

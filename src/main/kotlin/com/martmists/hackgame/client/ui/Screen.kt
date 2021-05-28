@@ -3,6 +3,8 @@ package com.martmists.hackgame.client.ui
 import com.googlecode.lanterna.TerminalSize
 import com.googlecode.lanterna.TextColor
 import com.googlecode.lanterna.graphics.SimpleTheme
+import com.googlecode.lanterna.graphics.TextGraphics
+import com.googlecode.lanterna.graphics.TextGraphicsWriter
 import com.googlecode.lanterna.gui2.*
 import com.googlecode.lanterna.screen.TerminalScreen
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory
@@ -45,6 +47,7 @@ object Screen {
     val inputBox: ActionTextBox
     val gui: MultiWindowTextGUI
     val mainWindow: BasicWindow
+    val graphics: TextGraphics
 
     init {
         val factory = DefaultTerminalFactory()
@@ -52,6 +55,7 @@ object Screen {
         terminal = factory.createTerminal()
         screen = TerminalScreen(terminal)
         screen.startScreen()
+        graphics = screen.newTextGraphics()
         gui = MultiWindowTextGUI(screen, DefaultWindowManager(), null)
         gui.theme = makeTheme()
 
@@ -59,7 +63,6 @@ object Screen {
         val width = screen.terminalSize.columns
         val height = screen.terminalSize.rows
         mainWindow.setHints(listOf(Window.Hint.FULL_SCREEN, Window.Hint.NO_DECORATIONS, Window.Hint.FIT_TERMINAL_WINDOW))
-
         mainPanel = Panel(GridLayout(2)).also { main ->
             main.layoutData = LinearLayout.createLayoutData(LinearLayout.Alignment.Fill)
 
@@ -236,6 +239,7 @@ object Screen {
         try {
             gui.addWindowAndWait(mainWindow)
         } catch (e: NullPointerException) {
+            e.printStackTrace()
             exitProcess(0)
         }
     }

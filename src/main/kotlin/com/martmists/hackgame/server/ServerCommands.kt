@@ -6,6 +6,7 @@ import com.martmists.hackgame.common.packets.HostDisconnectPacket
 import com.martmists.hackgame.common.registry.BuiltinPackets
 import com.martmists.hackgame.server.entities.CommandBuilder
 import com.martmists.hackgame.server.entities.ServerCommandSource
+import com.martmists.hackgame.common.entities.TextColor
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
 
@@ -14,7 +15,7 @@ object ServerCommands {
         CommandBuilder.builder(dispatcher) {
             command("money") {
                 executes {
-                    BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${it.source.currentHost.money}$"), it.source.connection)
+                    BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.YELLOW}${it.source.currentHost.money}$${TextColor.ANSI.WHITE}"), it.source.connection)
                 }
             }
 
@@ -75,7 +76,7 @@ object ServerCommands {
             command("disconnect") {
                 executes {
                     if (it.source.currentHost == it.source.ownHost) {
-                        BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("ERROR: Cannot disconnect from root"), it.source.connection)
+                        BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: Cannot disconnect from root${TextColor.ANSI.WHITE}"), it.source.connection)
                     } else {
                         val last = it.source.session.connectChain.pop()
                         it.source.session.currentIP = it.source.currentHost.ip
@@ -93,6 +94,9 @@ object ServerCommands {
 
             command("help") {
                 // Explain the game
+                executes {
+                    BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("TODO: Put guide here"), it.source.connection)
+                }
             }
 
             command("commands") {

@@ -8,7 +8,8 @@ import kotlin.concurrent.thread
 import kotlin.random.Random
 
 object PersistNPC {
-    val ipProviderHost = HostDevice("1.2.3.4",
+    val ipProviderHost = HostDevice(
+        "1.2.3.4",
         listOf(),
         listOf(),
         0,
@@ -38,6 +39,9 @@ object PersistNPC {
         while (Server.INSTANCE.running) {
             // Refresh every 15 minutes
             val now = LocalDateTime.now()
+            val dir = ipProviderHost.filesystem.getOrCreateDir("logs")
+            val file = dir.getOrCreateFile("users.txt")
+
             if (now.second == 0 && now.minute % 15 == 0) {
                 npc.forEach {
                     HostManager.removeTempHost(it)
@@ -47,7 +51,7 @@ object PersistNPC {
                     npc.add(generateRandomNPC().ip)
                 }
 
-                // TODO: Add IPs to ipProviderHost
+                file.contents = npc.joinToString("\n") { "Pinging $it: Success after ${Random.Default.nextInt(16)} tries." }
             }
         }
     }

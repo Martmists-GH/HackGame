@@ -16,6 +16,7 @@
 
 package net.fabricmc.loader;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -24,6 +25,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
+import net.fabricmc.loader.discovery.RuntimeModRemapper;
+import net.fabricmc.loader.metadata.DependencyOverrides;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,7 +56,11 @@ import net.fabricmc.loader.launch.knot.Knot;
 import net.fabricmc.loader.metadata.EntrypointMetadata;
 import net.fabricmc.loader.metadata.LoaderModMetadata;
 import net.fabricmc.loader.util.DefaultLanguageAdapter;
-import net.fabricmc.loader.transformer.accesswidener.AccessWidener;
+import net.fabricmc.loader.util.SystemProperties;
+import net.fabricmc.accesswidener.AccessWidener;
+import net.fabricmc.accesswidener.AccessWidenerReader;
+
+import org.objectweb.asm.Opcodes;
 
 /**
  * The main class for mod loading operations.
@@ -65,6 +73,8 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	@Deprecated
 	public static final FabricLoader INSTANCE = new FabricLoader();
 
+	public static final int ASM_VERSION = Opcodes.ASM9;
+
 	protected static Logger LOGGER = LogManager.getFormatterLogger("Fabric|Loader");
 
 	protected final Map<String, ModContainer> modMap = new HashMap<>();
@@ -72,7 +82,7 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 
 	private final Map<String, LanguageAdapter> adapterMap = new HashMap<>();
 	private final EntrypointStorage entrypointStorage = new EntrypointStorage();
-	private final AccessWidener accessWidener = new AccessWidener(this);
+	private final AccessWidener accessWidener = new AccessWidener();
 
 	private boolean frozen = false;
 
@@ -198,8 +208,13 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	private void setup() throws ModResolutionException {
 		ModResolver resolver = new ModResolver();
 		resolver.addCandidateFinder(new ClasspathModCandidateFinder());
-		resolver.addCandidateFinder(new DirectoryModCandidateFinder(getModsDir()));
+		resolver.addCandidateFinder(new DirectoryModCandidateFinder(getModsDir(), isDevelopmentEnvironment()));
 		Map<String, ModCandidate> candidateMap = resolver.resolve(this);
+
+		String modListText = candidateMap.values().stream()
+				.sorted(Comparator.comparing(candidate -> candidate.getInfo().getId()))
+				.map(candidate -> String.format("\t- %s@%s", candidate.getInfo().getId(), candidate.getInfo().getVersion().getFriendlyString()))
+				.collect(Collectors.joining("\n"));
 
 		String modText;
 		switch (candidateMap.values().size()) {
@@ -207,19 +222,34 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 				modText = "Loading %d mods";
 				break;
 			case 1:
-				modText = "Loading %d mod: %s";
+				modText = "Loading %d mod:";
 				break;
 			default:
-				modText = "Loading %d mods: %s";
+				modText = "Loading %d mods:";
 				break;
 		}
 
-		LOGGER.info("[" + getClass().getSimpleName() + "] " + modText, candidateMap.values().size(), candidateMap.values().stream()
-			.map(info -> String.format("%s@%s", info.getInfo().getId(), info.getInfo().getVersion().getFriendlyString()))
-			.collect(Collectors.joining(", ")));
+		LOGGER.info("[%s] " + modText + "%n%s", getClass().getSimpleName(), candidateMap.values().size(), modListText);
 
-		for (ModCandidate candidate : candidateMap.values()) {
-			addMod(candidate);
+		if (DependencyOverrides.INSTANCE.getDependencyOverrides().size() > 0) {
+			LOGGER.info(String.format("Dependencies overridden for \"%s\"", String.join(", ", DependencyOverrides.INSTANCE.getDependencyOverrides().keySet())));
+		}
+
+		boolean runtimeModRemapping = isDevelopmentEnvironment();
+
+		if (runtimeModRemapping && System.getProperty(SystemProperties.REMAP_CLASSPATH_FILE) == null) {
+			LOGGER.warn("Runtime mod remapping disabled due to no fabric.remapClasspathFile being specified. You may need to update loom.");
+			runtimeModRemapping = false;
+		}
+
+		if (runtimeModRemapping) {
+			for (ModCandidate candidate : RuntimeModRemapper.remap(candidateMap.values(), ModResolver.getInMemoryFs())) {
+				addMod(candidate);
+			}
+		} else {
+			for (ModCandidate candidate : candidateMap.values()) {
+				addMod(candidate);
+			}
 		}
 	}
 
@@ -227,7 +257,7 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 		// add mods to classpath
 		// TODO: This can probably be made safer, but that's a long-term goal
 		for (ModContainer mod : mods) {
-			if (!mod.getInfo().getId().equals("fabricloader")) {
+			if (!mod.getInfo().getId().equals("base")) {
 				FabricLauncherBase.getLauncher().propose(mod.getOriginUrl());
 			}
 		}
@@ -312,6 +342,12 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 		ModContainer container = new ModContainer(info, originUrl);
 		mods.add(container);
 		modMap.put(info.getId(), container);
+		for (String provides : info.getProvides()) {
+			if(modMap.containsKey(provides)) {
+				throw new ModResolutionException("Duplicate provided alias: " + provides + "! (" + modMap.get(info.getId()).getOriginUrl().getFile() + ", " + originUrl.getFile() + ")");
+			}
+			modMap.put(provides, container);
+		}
 	}
 
 	protected void postprocessModMetadata() {
@@ -378,8 +414,6 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	private void setupMods() {
 		for (ModContainer mod : mods) {
 			try {
-				mod.setupRootPath();
-
 				for (String in : mod.getInfo().getOldInitializers()) {
 					String adapter = mod.getInfo().getOldStyleLanguageAdapter();
 					entrypointStorage.addDeprecated(mod, adapter, in);
@@ -392,6 +426,24 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 				}
 			} catch (Exception e) {
 				throw new RuntimeException(String.format("Failed to setup mod %s (%s)", mod.getInfo().getName(), mod.getOriginUrl().getFile()), e);
+			}
+		}
+	}
+
+	public void loadAccessWideners() {
+		AccessWidenerReader accessWidenerReader = new AccessWidenerReader(accessWidener);
+		for (net.fabricmc.loader.api.ModContainer modContainer : getAllMods()) {
+			LoaderModMetadata modMetadata = (LoaderModMetadata) modContainer.getMetadata();
+			String accessWidener = modMetadata.getAccessWidener();
+
+			if (accessWidener != null) {
+				Path path = modContainer.getPath(accessWidener);
+
+				try (BufferedReader reader = Files.newBufferedReader(path)) {
+					accessWidenerReader.read(reader, getMappingResolver().getCurrentRuntimeNamespace());
+				} catch (Exception e) {
+					throw new RuntimeException("Failed to read accessWidener file from mod " + modMetadata.getId(), e);
+				}
 			}
 		}
 	}
@@ -469,5 +521,10 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 		}
 
 		this.gameInstance = gameInstance;
+	}
+
+	@Override
+	public String[] getLaunchArguments(boolean sanitize) {
+		return getGameProvider().getLaunchArguments(sanitize);
 	}
 }

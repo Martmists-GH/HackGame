@@ -1,6 +1,7 @@
 package com.martmists.hackgame.server.game
 
 import com.martmists.hackgame.common.DisconnectException
+import com.martmists.hackgame.common.entities.TextColor
 import com.martmists.hackgame.common.packets.*
 import com.martmists.hackgame.common.registry.BuiltinPackets
 import com.martmists.hackgame.server.Server
@@ -86,7 +87,7 @@ class PlayerSession(val connection: ServerConnection) {
         // TODO: Check if IP allows login or something idk
         if (HostManager.activeHosts.containsKey(remoteIp)) {
             if (connectChain.firstElement().ip == remoteIp) {
-                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("ERROR: Cannot connect to root host"), connection)
+                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: Cannot connect to root host${TextColor.ANSI.WHITE}"), connection)
                 return
             }
             currentIP = remoteIp
@@ -94,7 +95,7 @@ class PlayerSession(val connection: ServerConnection) {
             HostManager.activeHosts[remoteIp]!!.logConnection(currentIP)
             BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(remoteIp), connection)
         } else {
-            BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("ERROR: No such host: $remoteIp"), connection)
+            BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: No such host: $remoteIp${TextColor.ANSI.WHITE}"), connection)
         }
     }
 }

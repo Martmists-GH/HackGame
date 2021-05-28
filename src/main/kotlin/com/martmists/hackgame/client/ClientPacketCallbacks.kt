@@ -1,5 +1,6 @@
 package com.martmists.hackgame.client
 
+import com.googlecode.lanterna.TextColor
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton
 import com.martmists.hackgame.client.ui.Screen

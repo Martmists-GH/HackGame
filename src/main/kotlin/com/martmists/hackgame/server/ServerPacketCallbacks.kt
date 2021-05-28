@@ -4,7 +4,7 @@ import com.martmists.hackgame.common.packets.DisconnectPacket
 import com.martmists.hackgame.common.packets.FeedbackPacket
 import com.martmists.hackgame.common.packets.PingPacket
 import com.martmists.hackgame.common.registry.BuiltinPackets
-import com.martmists.hackgame.server.entities.ServerCommandSource
+import com.martmists.hackgame.common.entities.TextColor
 import java.lang.Exception
 import kotlin.random.Random
 
@@ -37,7 +37,7 @@ object ServerPacketCallbacks {
                 context.session.onCommandPacket(packet)
             } catch(e: Exception) {
                 val error = e.message ?: "Unknown Error"
-                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("ERROR: $error"), context.connection)
+                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: $error${TextColor.ANSI.WHITE}"), context.connection)
             }
         }
     }

@@ -9,6 +9,7 @@ import com.martmists.hackgame.loader.Main
 import org.slf4j.Logger
 import java.io.*
 import java.net.Socket
+import java.net.SocketException
 import java.nio.ByteBuffer
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -27,11 +28,15 @@ abstract class Connection {
     private var flush = false
 
     fun runWriteThread() = thread(start=true, isDaemon=true, name="Packet Send Thread") {
-        while ((connected && socket.isConnected) || flush) {
-            val packet = packetQueue.take()
-            writer.write(ByteBuffer.allocate(4).putInt(packet.size).array())
-            writer.write(packet)
-            writer.flush()
+        try {
+            while ((connected && socket.isConnected) || flush) {
+                val packet = packetQueue.take()
+                writer.write(ByteBuffer.allocate(4).putInt(packet.size).array())
+                writer.write(packet)
+                writer.flush()
+            }
+        } catch (e: SocketException) {
+            connected = false
         }
     }
 
