@@ -7,6 +7,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import java.util.function.BiConsumer
 import kotlin.reflect.KClass
 
+@ExperimentalSerializationApi
 object PacketRegistry {
     val funMapped = mutableMapOf<String, PacketConfig<*, *>>()
 

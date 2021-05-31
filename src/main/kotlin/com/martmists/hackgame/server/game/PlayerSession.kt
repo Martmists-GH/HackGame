@@ -1,6 +1,7 @@
 package com.martmists.hackgame.server.game
 
 import com.martmists.hackgame.common.DisconnectException
+import com.martmists.hackgame.common.entities.ActionResult
 import com.martmists.hackgame.common.entities.TextColor
 import com.martmists.hackgame.common.packets.*
 import com.martmists.hackgame.common.registry.BuiltinPackets
@@ -14,6 +15,7 @@ import com.martmists.hackgame.server.database.tables.AccountTable
 import com.martmists.hackgame.server.database.tables.HostTable
 import com.martmists.hackgame.server.entities.ServerCommandSource
 import com.martmists.hackgame.server.entities.ServerConnection
+import com.martmists.hackgame.server.events.ConnectEvent
 import com.toxicbakery.bcrypt.Bcrypt
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -87,15 +89,30 @@ class PlayerSession(val connection: ServerConnection) {
         // TODO: Check if IP allows login or something idk
         if (HostManager.activeHosts.containsKey(remoteIp)) {
             if (connectChain.firstElement().ip == remoteIp) {
-                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: Cannot connect to root host${TextColor.ANSI.WHITE}"), connection)
+                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: Cannot connect to root host"), connection)
                 return
             }
+
+            if (connectChain.lastElement().ip == remoteIp) {
+                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: Cannot connect to same host"), connection)
+                return
+            }
+
+            val currentHost = connectChain.lastElement()
+            val toHost = HostManager.activeHosts[remoteIp]!!
+
+            if (ConnectEvent.BEFORE.invoker().invoke(currentHost, toHost, this) == ActionResult.FAIL) {
+                return
+            }
+
             currentIP = remoteIp
-            connectChain.push(HostManager.activeHosts[remoteIp]!!)
-            HostManager.activeHosts[remoteIp]!!.logConnection(currentIP)
+            connectChain.push(toHost)
+            toHost.logConnection(currentIP)
             BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(remoteIp), connection)
+            ConnectEvent.AFTER.invoker().invoke(currentHost, toHost, this)
+
         } else {
-            BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: No such host: $remoteIp${TextColor.ANSI.WHITE}"), connection)
+            BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: No such host: $remoteIp"), connection)
         }
     }
 }

@@ -37,7 +37,7 @@ object ServerPacketCallbacks {
                 context.session.onCommandPacket(packet)
             } catch(e: Exception) {
                 val error = e.message ?: "Unknown Error"
-                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: $error${TextColor.ANSI.WHITE}"), context.connection)
+                BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: $error"), context.connection)
             }
         }
     }

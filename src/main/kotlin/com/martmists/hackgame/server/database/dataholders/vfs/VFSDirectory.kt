@@ -1,8 +1,10 @@
 package com.martmists.hackgame.server.database.dataholders.vfs
 
+import com.martmists.hackgame.common.entities.TextColor
 import kotlinx.serialization.Serializable
 import java.io.File
 import java.io.FileNotFoundException
+import java.lang.Exception
 
 @Serializable
 data class VFSDirectory @JvmOverloads constructor(val name: String, var directories: List<VFSDirectory> = emptyList(), var files: List<VFSFile> = emptyList(), var isReadOnly: Boolean = false) {
@@ -69,18 +71,27 @@ data class VFSDirectory @JvmOverloads constructor(val name: String, var director
     }
 
     @Synchronized
-    fun generateView() : String {
-        var buf = if (name == "root") "" else "$name\n"
-        for (directory in directories) {
-            val text = directory.generateView()
-            for (line in text.split("\n")) {
-                buf += "  $line\n"
+    fun generateView(isRoot: Boolean = true) : String {
+        var buf = "${TextColor.ANSI.YELLOW}$name${TextColor.ANSI.WHITE}\n"
+        directories.forEachIndexed { index, directory ->
+
+            val text = directory.generateView(false)
+            text.split("\n").forEachIndexed { i, line ->
+                val c = when {
+                    i == 0 && index == directories.lastIndex -> "└──"
+                    i == 0 && index != directories.lastIndex -> "├──"
+                    i != 0 && index == directories.lastIndex -> "   "
+                    i != 0 && index != directories.lastIndex -> "│  "
+                    else -> error("Should never happen")
+                }
+                buf += "$c$line\n"
             }
         }
-        for (file in files) {
-            buf += "- ${file.filename}\n"
+        files.forEachIndexed { index, file ->
+            val c = if (index == files.lastIndex) "└" else "├"
+            buf += "$c── ${file.filename}\n"
         }
-        return buf
+        return buf.stripTrailing()
     }
 
     @Synchronized

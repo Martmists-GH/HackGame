@@ -39,6 +39,16 @@ object CommandBuilder {
             }
             */
         }
+        
+        fun software(name: String, builder: CommandBuilder.() -> Unit) {
+            val node = LiteralArgumentBuilder.literal<ServerCommandSource>(name)
+            builder(CommandBuilder(node))
+            val configured = node.requirement
+            node.requires {
+                it.currentHost.software.any { it.name == name } && configured.test(it)
+            }
+            dispatcher.register(node)
+        }
     }
 
     open class CommandBuilder(internal val command: BrigadierArgumentBuilder<ServerCommandSource, *>) {

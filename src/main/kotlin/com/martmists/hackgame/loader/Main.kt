@@ -42,7 +42,7 @@ object Main {
             mode = _mode
             new_args = _args.toTypedArray()
         } else {
-            mode = Mode.valueOf(version.toUpperCase())
+            mode = Mode.valueOf(version.uppercase())
             new_args = args
         }
 

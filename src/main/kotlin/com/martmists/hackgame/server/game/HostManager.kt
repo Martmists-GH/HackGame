@@ -4,6 +4,7 @@ import com.martmists.hackgame.server.database.DatabaseManager
 import com.martmists.hackgame.server.database.dataholders.StoredHostDevice
 import com.martmists.hackgame.server.database.tables.HostTable
 import com.martmists.hackgame.server.entities.SoftwareRegistry
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
@@ -12,15 +13,22 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import kotlin.random.Random
 
+@ExperimentalSerializationApi
 object HostManager {
     val activeHosts = mutableMapOf<String, HostDevice>()
 
     fun loadStoredHosts() {
         val map = DatabaseManager.transaction {
-            HostTable.selectAll().map {
+            HostTable.selectAll().associate {
                 val host = ProtoBuf.decodeFromByteArray<StoredHostDevice>(it[HostTable.device])
-                it[HostTable.address] to HostDevice(it[HostTable.address], listOf(), host.software.map(SoftwareRegistry::get), host.money, host.files)
-            }.toMap()
+                it[HostTable.address] to HostDevice(
+                    it[HostTable.address],
+                    listOf(),
+                    host.software.map(SoftwareRegistry::get),
+                    host.money,
+                    host.files
+                )
+            }
         }.get()
         activeHosts.putAll(map)
     }
