@@ -3,6 +3,7 @@ package com.martmists.hackgame.server
 import com.martmists.hackgame.server.database.DatabaseManager
 import com.martmists.hackgame.server.entities.ServerCommandSource
 import com.martmists.hackgame.server.entities.ServerConnection
+import com.martmists.hackgame.server.events.ServerLifecycleEvents
 import com.martmists.hackgame.server.game.HostManager
 import com.martmists.hackgame.server.game.PersistNPC
 import com.mojang.brigadier.CommandDispatcher
@@ -46,6 +47,7 @@ class Server {
         // TODO: Event/Task thread
 
         // Handle these on main thread
+        ServerLifecycleEvents.START.invoker().invoke(this)
         handleConnections()
     }
 

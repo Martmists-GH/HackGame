@@ -11,6 +11,7 @@ import kotlinx.serialization.encodeToByteArray
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 import kotlin.random.Random
 
 @ExperimentalSerializationApi
@@ -70,6 +71,19 @@ object HostManager {
         return HostDevice(ip, listOf(), default.software.map(SoftwareRegistry::get), default.money, default.files).also {
             // Set as active host
             activeHosts[ip] = it
+        }
+    }
+
+    fun updateToDB(ip: String) {
+        val host = activeHosts[ip]!!
+        DatabaseManager.transaction {
+            HostTable.update({ HostTable.address.eq(ip) }) {
+                it[HostTable.device] = ProtoBuf.encodeToByteArray(StoredHostDevice(
+                    host.money,
+                    host.software.map(SoftwareRegistry::getId),
+                    host.filesystem
+                ))
+            }
         }
     }
 

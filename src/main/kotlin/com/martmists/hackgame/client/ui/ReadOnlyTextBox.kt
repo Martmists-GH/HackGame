@@ -50,7 +50,7 @@ class ReadOnlyTextBox(preferredSize: TerminalSize, initialContent: String, style
 
         val lineCount = newText.count { it == '\n' } + 1
         if (lineCount > size.rows) {
-            val min = (lineCount - size.rows - 2 - scrollOffset).coerceAtLeast(0)
+            val min = (lineCount - size.rows - 1 - scrollOffset).coerceAtLeast(0)
             val split = newText.split("\n")
             newText = split.subList(min, (min + size.rows + 1).coerceAtMost(split.size)).joinToString("\n")
         }
@@ -82,7 +82,7 @@ class ReadOnlyTextBox(preferredSize: TerminalSize, initialContent: String, style
 
         val lineCount = newText.count { it == '\n' } + 1
         if (lineCount > size.rows) {
-            val min = (lineCount - size.rows - 2 - scrollOffset).coerceAtLeast(0)
+            val min = (lineCount - size.rows - 1 - scrollOffset).coerceAtLeast(0)
             val split = newText.split("\n")
             newText = split.subList(min, (min + size.rows + 1).coerceAtMost(split.size)).joinToString("\n")
         }

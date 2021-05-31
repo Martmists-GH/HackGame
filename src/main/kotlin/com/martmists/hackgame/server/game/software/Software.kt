@@ -4,6 +4,12 @@ interface Software {
     val name: String
     val tier: Int
 
-    val isLock: Boolean
-    val isExecutable: Boolean
+    val type: Type
+
+    enum class Type {
+        LOCK,
+        EXECUTABLE,
+        MALWARE,
+        TROPHY
+    }
 }

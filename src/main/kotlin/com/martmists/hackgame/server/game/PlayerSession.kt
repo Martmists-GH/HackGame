@@ -10,15 +10,12 @@ import com.martmists.hackgame.server.database.DatabaseManager
 import com.martmists.hackgame.server.database.dataholders.StoredAccount
 import com.martmists.hackgame.server.database.dataholders.StoredHostDevice
 import com.martmists.hackgame.server.database.dataholders.vfs.VFSDirectory
-import com.martmists.hackgame.server.database.dataholders.vfs.VFSFile
 import com.martmists.hackgame.server.database.tables.AccountTable
-import com.martmists.hackgame.server.database.tables.HostTable
 import com.martmists.hackgame.server.entities.ServerCommandSource
 import com.martmists.hackgame.server.entities.ServerConnection
-import com.martmists.hackgame.server.events.ConnectEvent
+import com.martmists.hackgame.server.events.HostEvents
+import com.martmists.hackgame.server.events.PlayerLifecycleEvents
 import com.toxicbakery.bcrypt.Bcrypt
-import kotlinx.serialization.encodeToByteArray
-import kotlinx.serialization.protobuf.ProtoBuf
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import java.util.*
@@ -36,6 +33,7 @@ class PlayerSession(val connection: ServerConnection) {
             throw DisconnectException()
         }
 
+        var host: HostDevice
         if (packet.register) {
             val address = HostManager.getRandomAvailableIp()
 
@@ -48,7 +46,8 @@ class PlayerSession(val connection: ServerConnection) {
                 throw DisconnectException()
             }
 
-            HostManager.createStoredHost(address, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
+            host = HostManager.createStoredHost(address, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
+            PlayerLifecycleEvents.REGISTER.invoker().invoke(packet.name, host)
 
             DatabaseManager.transaction {
                 AccountTable.insert {
@@ -70,9 +69,10 @@ class PlayerSession(val connection: ServerConnection) {
             }
 
             account = foundAccount
+            host = HostManager.loadOrCreateStoredHost(account.homeIP, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
+            PlayerLifecycleEvents.LOGIN.invoker().invoke(packet.name, host)
         }
 
-        val host = HostManager.loadOrCreateStoredHost(account.homeIP, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
         connectChain.push(host)
         BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(account.homeIP), connection)
         currentIP = account.homeIP
@@ -82,6 +82,7 @@ class PlayerSession(val connection: ServerConnection) {
     fun onCommandPacket(packet: CommandPacket) {
         val source = ServerCommandSource(connection)
         val parsed = Server.INSTANCE.dispatcher.parse(packet.cmd, source)
+
         Server.INSTANCE.dispatcher.execute(parsed)
     }
 
@@ -101,7 +102,7 @@ class PlayerSession(val connection: ServerConnection) {
             val currentHost = connectChain.lastElement()
             val toHost = HostManager.activeHosts[remoteIp]!!
 
-            if (ConnectEvent.BEFORE.invoker().invoke(currentHost, toHost, this) == ActionResult.FAIL) {
+            if (HostEvents.BEFORE_CONNECT.invoker().invoke(currentHost, toHost, this) == ActionResult.FAIL) {
                 return
             }
 
@@ -109,7 +110,7 @@ class PlayerSession(val connection: ServerConnection) {
             connectChain.push(toHost)
             toHost.logConnection(currentIP)
             BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(remoteIp), connection)
-            ConnectEvent.AFTER.invoker().invoke(currentHost, toHost, this)
+            HostEvents.AFTER_CONNECT.invoker().invoke(currentHost, toHost, this)
 
         } else {
             BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.RED}ERROR: No such host: $remoteIp"), connection)

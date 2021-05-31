@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "id": "base",
-  "name": "Base Game",
+  "id": "fabric-loader",
+  "name": "Fabric Loader (builtin)",
   "version": "${version}",
   "environment": "*",
-  "description": "The base game.",
+  "description": "The modloader for hackgame.",
   "authors": [
-    "Martmists"
+    "FabricMC"
   ]
 }

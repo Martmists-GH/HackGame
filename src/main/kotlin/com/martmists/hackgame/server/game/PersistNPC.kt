@@ -1,9 +1,10 @@
 package com.martmists.hackgame.server.game
 
+import com.martmists.hackgame.common.entities.ActionResult
 import com.martmists.hackgame.server.Server
 import com.martmists.hackgame.server.database.dataholders.vfs.VFSDirectory
-import com.martmists.hackgame.server.events.ConnectEvent
-import kotlinx.serialization.ExperimentalSerializationApi
+import com.martmists.hackgame.server.events.HostEvents
+import com.martmists.hackgame.server.events.NpcEvents
 import java.time.LocalDateTime
 import kotlin.concurrent.thread
 import kotlin.random.Random
@@ -32,28 +33,36 @@ object PersistNPC {
     }
 
     private fun providerAI() {
-        ConnectEvent.AFTER.addListener { host, source, player ->
+        HostEvents.AFTER_CONNECT.addListener { host, source, player ->
             if (host == ipProviderHost) {
                 // TODO: Add (non-installed) software files if missing
             }
+            ActionResult.PASS
         }
 
         while (Server.INSTANCE.running) {
             // Refresh every 15 minutes
             val now = LocalDateTime.now()
             val dir = ipProviderHost.filesystem.getOrCreateDir("logs")
-            val file = dir.getOrCreateFile("users.log")
+            dir.files.filter { it.filename.startsWith("probe") }.map { dir.removeFile(it.filename) }
 
-            if (now.second == 0 && now.minute % 15 == 0) {
-                providerNPCs.forEach {
-                    HostManager.removeTempHost(it)
-                }
-                providerNPCs.clear()
-                for (x in 1..50) {
-                    providerNPCs.add(generateRandomNPC().ip)
-                }
+            for (x in 0..Random.Default.nextInt(3, 6)) {
+                val file = dir.getOrCreateFile("probe$x.log")
 
-                file.contents = providerNPCs.joinToString("\n") { "Pinging $it: Success after ${Random.Default.nextInt(16)} tries." }
+                if (now.second == 0 && now.minute % 15 == 0) {
+                    providerNPCs.forEach {
+                        NpcEvents.DESPAWN.invoker().invoke(HostManager.activeHosts[it]!!)
+                        HostManager.removeTempHost(it)
+                    }
+                    providerNPCs.clear()
+                    for (x in 1..20) {
+                        val npc = generateRandomNPC()
+                        NpcEvents.SPAWN.invoker().invoke(npc)
+                        providerNPCs.add(npc.ip)
+                    }
+
+                    file.contents = providerNPCs.joinToString("\n") { "Pinging $it: Success after ${Random.Default.nextInt(1, 16)} tries." }
+                }
             }
         }
     }

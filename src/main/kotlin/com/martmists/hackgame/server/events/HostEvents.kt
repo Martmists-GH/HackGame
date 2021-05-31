@@ -5,20 +5,20 @@ import com.martmists.hackgame.common.events.Event
 import com.martmists.hackgame.server.game.HostDevice
 import com.martmists.hackgame.server.game.PlayerSession
 
-fun interface ConnectEvent {
+fun interface HostEvents {
     fun invoke(host: HostDevice, source: HostDevice, player: PlayerSession): ActionResult
 
     companion object {
-        val BEFORE = Event<ConnectEvent> { callbacks ->
-            ConnectEvent { host, source, player ->
+        val BEFORE_CONNECT = Event<HostEvents> { callbacks ->
+            HostEvents { host, source, player ->
                 ActionResult.conditionally(callbacks) {
                     it.invoke(host, source, player)
                 }
             }
         }
 
-        val AFTER = Event<ConnectEvent> { callbacks ->
-            ConnectEvent { host, source, player ->
+        val AFTER_CONNECT = Event<HostEvents> { callbacks ->
+            HostEvents { host, source, player ->
                 ActionResult.all(callbacks) {
                     it.invoke(host, source, player)
                 }
