@@ -108,7 +108,7 @@ class PlayerSession(val connection: ServerConnection) {
 
             currentIP = remoteIp
             connectChain.push(toHost)
-            toHost.logConnection(currentIP)
+            toHost.logConnection(currentHost.ip)
             BuiltinPackets.HOST_CONNECT_S2C.send(HostConnectPacket(remoteIp), connection)
             HostEvents.AFTER_CONNECT.invoker().invoke(currentHost, toHost, this)
 

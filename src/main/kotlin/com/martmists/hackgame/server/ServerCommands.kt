@@ -110,18 +110,18 @@ object ServerCommands {
 
             command("commands") {
                 executes {
-                    val commands = dispatcher.root.children.joinToString("\n") { c -> "- ${TextColor.ANSI.GREEN}${c.name}${TextColor.ANSI.WHITE}" }
+                    val commands = dispatcher.root.children.filter { itt -> itt.requirement?.test(it.source) ?: true }.joinToString("\n") { c -> "- ${TextColor.ANSI.GREEN}${c.name}${TextColor.ANSI.WHITE}" }
                     BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("Commands:\n$commands"), it.source.connection)
                 }
 
-                argument("cmd", StringArgumentType.word()) {
-                    executes {
-                        val command = dispatcher.root.getChild(StringArgumentType.getString(it, "cmd")) ?: null
-                        // TODO:
-                        // Error message if command is null
-                        // Command usage if command is not null
-                    }
-                }
+//                argument("cmd", StringArgumentType.word()) {
+//                    executes {
+//                        val command = dispatcher.root.getChild(StringArgumentType.getString(it, "cmd")) ?: null
+//                        // TODO:
+//                        // Error message if command is null
+//                        // Command usage if command is not null
+//                    }
+//                }
             }
 
             command("software") {
@@ -129,23 +129,23 @@ object ServerCommands {
                     BuiltinPackets.FEEDBACK_S2C.send(FeedbackPacket("${TextColor.ANSI.WHITE}Usage: software [install|uninstall|list]"), it.source.connection)
                 }
 
-                literal("install") {
-                    // Move to bin folder
-                    argument("software", StringArgumentType.string()) {
-                        executes {
-                            // If file exists, install, add to software and move
-                            // If file not exists, error
-                        }
-                    }
-                }
-
-                literal("uninstall") {
-                    // move to software folder
-                }
-
-                literal("list") {
-                    // list installed software
-                }
+//                literal("install") {
+//                    // Move to bin folder
+//                    argument("software", StringArgumentType.string()) {
+//                        executes {
+//                            // If file exists, install, add to software and move
+//                            // If file not exists, error
+//                        }
+//                    }
+//                }
+//
+//                literal("uninstall") {
+//                    // move to software folder
+//                }
+//
+//                literal("list") {
+//                    // list installed software
+//                }
             }
         }
     }
