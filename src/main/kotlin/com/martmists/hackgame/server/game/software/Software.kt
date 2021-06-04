@@ -4,6 +4,7 @@ import com.martmists.hackgame.server.entities.ServerCommandSource
 import com.mojang.brigadier.context.CommandContext
 
 interface Software {
+    val filename: String
     val name: String
     val tier: Int
 

@@ -8,7 +8,8 @@ open class HostDevice(
         var connectedUsers: List<PlayerSession>,
         var software: List<Software>,
         var money: Int,
-        val filesystem: VFSDirectory
+        val filesystem: VFSDirectory,
+        var password: String
 ) {
     fun logConnection(sourceIP: String) {
         val dir = filesystem.getOrCreateDir("logs")

@@ -7,5 +7,6 @@ import kotlinx.serialization.Serializable
 data class StoredHostDevice @JvmOverloads constructor(
         val money: Int,
         val software: List<String> = emptyList(),
-        val files: VFSDirectory
+        val files: VFSDirectory,
+        val password: String,
 )

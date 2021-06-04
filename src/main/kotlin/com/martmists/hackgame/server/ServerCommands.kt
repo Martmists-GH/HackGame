@@ -7,6 +7,7 @@ import com.martmists.hackgame.common.registry.BuiltinPackets
 import com.martmists.hackgame.server.entities.CommandBuilder
 import com.martmists.hackgame.server.entities.ServerCommandSource
 import com.martmists.hackgame.common.entities.TextColor
+import com.martmists.hackgame.server.game.HostManager
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -122,6 +123,15 @@ object ServerCommands {
 //                        // Command usage if command is not null
 //                    }
 //                }
+            }
+
+            command("resetpass") {
+                executes {
+                    it.source.currentHost.apply {
+                        password = HostManager.generateRandomPass()
+                        HostManager.updateToDB(ip)
+                    }
+                }
             }
 
             command("software") {

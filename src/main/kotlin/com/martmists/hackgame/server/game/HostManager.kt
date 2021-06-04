@@ -27,7 +27,8 @@ object HostManager {
                     listOf(),
                     host.software.map(SoftwareRegistry::get),
                     host.money,
-                    host.files
+                    host.files,
+                    host.password
                 )
             }
         }.get()
@@ -40,6 +41,11 @@ object HostManager {
             addr = "${Random.nextInt(256)}.${Random.nextInt(256)}.${Random.nextInt(256)}.${Random.nextInt(256)}"
         } while (addr in activeHosts.keys)
         return addr
+    }
+
+    fun generateRandomPass(): String {
+        val characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return (1..8).joinToString("") { characters.random().toString() }
     }
 
     fun getRandomUsedIp(): String {
@@ -68,7 +74,7 @@ object HostManager {
             }
         }.get()
 
-        return HostDevice(ip, listOf(), default.software.map(SoftwareRegistry::get), default.money, default.files).also {
+        return HostDevice(ip, listOf(), default.software.map(SoftwareRegistry::get), default.money, default.files, default.password).also {
             // Set as active host
             activeHosts[ip] = it
         }
@@ -81,7 +87,8 @@ object HostManager {
                 it[HostTable.device] = ProtoBuf.encodeToByteArray(StoredHostDevice(
                     host.money,
                     host.software.map(SoftwareRegistry::getId),
-                    host.filesystem
+                    host.filesystem,
+                    host.password
                 ))
             }
         }

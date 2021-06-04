@@ -46,7 +46,7 @@ class PlayerSession(val connection: ServerConnection) {
                 throw DisconnectException()
             }
 
-            host = HostManager.createStoredHost(address, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
+            host = HostManager.createStoredHost(address, StoredHostDevice(0, listOf(), VFSDirectory.empty(), HostManager.generateRandomPass()))
             PlayerLifecycleEvents.REGISTER.invoker().invoke(packet.name, host)
 
             DatabaseManager.transaction {
@@ -69,7 +69,7 @@ class PlayerSession(val connection: ServerConnection) {
             }
 
             account = foundAccount
-            host = HostManager.loadOrCreateStoredHost(account.homeIP, StoredHostDevice(0, listOf(), VFSDirectory.empty()))
+            host = HostManager.loadOrCreateStoredHost(account.homeIP, StoredHostDevice(0, listOf(), VFSDirectory.empty(), HostManager.generateRandomPass()))
             PlayerLifecycleEvents.LOGIN.invoker().invoke(packet.name, host)
         }
 

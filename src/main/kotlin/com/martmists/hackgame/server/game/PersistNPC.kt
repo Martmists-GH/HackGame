@@ -12,7 +12,8 @@ object PersistNPC {
         listOf(),
         listOf(),
         0,
-        VFSDirectory("root")
+        VFSDirectory("root"),
+        ""
     )
     private val providerNPCs = mutableListOf<String>()
 
@@ -24,7 +25,7 @@ object PersistNPC {
 
     fun generateRandomNPC() : HostDevice {
         val ip = HostManager.getRandomAvailableIp()
-        return HostDevice(ip, listOf(), listOf(), Random.Default.nextInt(0, 10), VFSDirectory.empty()).also {
+        return HostDevice(ip, listOf(), listOf(), Random.Default.nextInt(0, 10), VFSDirectory.empty(), HostManager.generateRandomPass()).also {
             HostManager.registerTempHost(it)
         }
     }
