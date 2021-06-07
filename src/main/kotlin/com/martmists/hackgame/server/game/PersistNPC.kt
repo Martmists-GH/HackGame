@@ -13,7 +13,7 @@ object PersistNPC {
         listOf(),
         0,
         VFSDirectory("root"),
-        ""
+        "h4ckpr00f"
     )
     private val providerNPCs = mutableListOf<String>()
 
@@ -31,8 +31,19 @@ object PersistNPC {
     }
 
     private fun initProviderAI() {
-        cron("[AI] 1.2.3.4 Software", seconds=5) {
+        cron("[AI] 1.2.3.4 Software", seconds=1) {
+            // Reset password if changed
+            if (ipProviderHost.password != "h4ckpr00f") {
+                ipProviderHost.broadcast("don't do that.")
+                ipProviderHost.password = "h4ckpr00f"
+            }
+
+            // Remove access.log if present
+            val dir = ipProviderHost.filesystem.getOrCreateDir("logs")
+            dir.removeFile("access.log")
+
             // Re-add software for AI thread
+
         }
 
         cron("[AI] 1.2.3.4 AI", minutes=15) {

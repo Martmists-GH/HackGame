@@ -16,4 +16,8 @@ open class HostDevice(
         val file = dir.getOrCreateFile("access.log")
         file.contents += "Received log-in from $sourceIP"
     }
+
+    fun broadcast(message: String) {
+        TODO()
+    }
 }
