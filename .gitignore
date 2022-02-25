@@ -4,3 +4,4 @@ build/
 mods/
 logs/
 .mixin.out/
+run/

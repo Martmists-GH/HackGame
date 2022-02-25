@@ -1,0 +1,38 @@
+# Client Config
+
+# Server settings
+server:
+  host: localhost
+  port: 22222
+
+# Theme
+theme:
+  # Use a preset theme, or 'custom' for custom colors
+  # Preset themes: defaultDark, googleDark
+  name: defaultDark
+
+  # Custom theme
+  colors:
+    background: 0x151515
+    default: 0xd0d0d0
+    
+    black: 0x151515
+    red: 0xac4142
+    green: 0x90a959
+    yellow: 0xf4bf75
+    blue: 0x6a9fb5
+    magenta: 0xaa759f
+    cyan: 0x75b5aa
+    white: 0xd0d0d0
+    
+    bright_black: 0x505050
+    bright_red: 0xac4142
+    bright_green: 0x90a959
+    bright_yellow: 0xf4bf75
+    bright_blue: 0x6a9fb5
+    bright_magenta: 0xaa759f
+    bright_cyan: 0x75b5aa
+    bright_white: 0xf5f5f5
+
+ui:
+  vsync: true

@@ -1,0 +1,20 @@
+# Server Config
+
+server:
+  port: 22222
+
+# Database
+database:
+  # Database driver
+  # Available drivers: sqlite, postgres
+  driver: sqlite
+
+  # Database name
+  # For sqlite this is the file name
+  database: game
+
+  # Only used for postgres
+  host: localhost
+  port: 3306
+  username: root
+  password: root
