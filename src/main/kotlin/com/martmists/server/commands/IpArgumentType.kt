@@ -12,8 +12,9 @@ class IpArgumentType<C : CommandContext> private constructor() : ArgumentType<C,
         for (part in parts) {
             if (part.length > 3) return null
             if (part.toIntOrNull() == null) return null
+            if (part.toInt() > 255) return null
         }
-        return input
+        return ip
     }
 
     override suspend fun value(context: C, value: String): String {

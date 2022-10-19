@@ -10,8 +10,8 @@ import java.io.FileNotFoundException
 data class VFSDirectory @JvmOverloads constructor(val name: String = "root", var directories: List<VFSDirectory> = emptyList(), var files: List<VFSFile> = emptyList(), var isReadOnly: Boolean = false) {
     @Synchronized
     fun addDir(name: String) : VFSDirectory {
-        if (name == "root") {
-            throw IllegalArgumentException("Cannot create dir with name 'root'")
+        if (name.isBlank()) {
+            throw IllegalArgumentException("Cannot create dir with blank name")
         }
 
         if (directories.any { it.name == name }) {
@@ -25,11 +25,17 @@ data class VFSDirectory @JvmOverloads constructor(val name: String = "root", var
 
     @Synchronized
     fun getDir(name: String) : VFSDirectory {
+        if (name.isBlank()) {
+            return this
+        }
         return directories.firstOrNull { it.name == name } ?: throw FileNotFoundException(name)
     }
 
     @Synchronized
     fun getOrCreateDir(name: String) : VFSDirectory {
+        if (name.isBlank()) {
+            return this
+        }
         return directories.firstOrNull { it.name == name } ?: addDir(name)
     }
 
@@ -53,9 +59,11 @@ data class VFSDirectory @JvmOverloads constructor(val name: String = "root", var
     @Synchronized
     fun getDirByPath(path: String) : VFSDirectory {
         var dir = this
+
         for (sub in path.split("/")) {
             dir = dir.getDir(sub)
         }
+
         return dir
     }
 
@@ -72,7 +80,7 @@ data class VFSDirectory @JvmOverloads constructor(val name: String = "root", var
 
     @Synchronized
     fun generateView(isRoot: Boolean = true) : String {
-        var buf = "${TextColor.ANSI.YELLOW}$name${TextColor.ANSI.WHITE}\n"
+        var buf = "${TextColor.ANSI.YELLOW}$name/${TextColor.ANSI.WHITE}\n"
         directories.forEachIndexed { index, directory ->
 
             val text = directory.generateView(false)
@@ -105,6 +113,10 @@ data class VFSDirectory @JvmOverloads constructor(val name: String = "root", var
     }
 
     companion object {
-        fun empty() = VFSDirectory("root")
+        fun default() = VFSDirectory("").also {
+            it.addDir("bin").also {
+                it.isReadOnly = true
+            }
+        }
     }
 }

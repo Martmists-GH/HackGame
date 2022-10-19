@@ -39,12 +39,12 @@ fun registerFs(dispatcher: Dispatcher<ServerCommandContext>) {
             argument("path", StringArgumentType.greedy()) { path ->
                 action {
                     val parts = path().split("/").toMutableList()
-                    if (parts.first() == "bin") {
-                        BuiltinPackets.FEEDBACK.send(connection, FeedbackPacket("${TextColor.ANSI.RED}Cannot delete files in bin"))
-                        return@action
-                    }
                     val file = parts.removeLast()
                     val dir = host.filesystem.getDirByPath(parts.joinToString("/"))
+                    if (dir.isReadOnly) {
+                        BuiltinPackets.FEEDBACK.send(connection, FeedbackPacket("${TextColor.ANSI.RED}Cannot delete files in read-only directory"))
+                        return@action
+                    }
                     dir.removeFile(file)
                 }
             }
@@ -54,12 +54,12 @@ fun registerFs(dispatcher: Dispatcher<ServerCommandContext>) {
             argument("path", StringArgumentType.greedy()) { path ->
                 action {
                     val parts = path().split("/").toMutableList()
-                    if (parts.first() == "bin") {
-                        BuiltinPackets.FEEDBACK.send(connection, FeedbackPacket("${TextColor.ANSI.RED}Cannot delete folders in bin"))
-                        return@action
-                    }
                     val dirname = parts.removeLast()
                     val dir = host.filesystem.getDirByPath(parts.joinToString("/"))
+                    if (dir.isReadOnly) {
+                        BuiltinPackets.FEEDBACK.send(connection, FeedbackPacket("${TextColor.ANSI.RED}Cannot delete files in read-only directory"))
+                        return@action
+                    }
                     dir.removeDir(dirname)
                 }
             }
@@ -69,13 +69,55 @@ fun registerFs(dispatcher: Dispatcher<ServerCommandContext>) {
             argument("path", StringArgumentType.greedy()) { path ->
                 action {
                     val parts = path().split("/").toMutableList()
-                    if (parts.first() == "bin") {
-                        BuiltinPackets.FEEDBACK.send(connection, FeedbackPacket("${TextColor.ANSI.RED}Cannot create folders in bin"))
-                        return@action
-                    }
                     val dirname = parts.removeLast()
                     val dir = host.filesystem.getDirByPath(parts.joinToString("/"))
+                    if (dir.isReadOnly) {
+                        BuiltinPackets.FEEDBACK.send(connection, FeedbackPacket("${TextColor.ANSI.RED}Cannot create files in read-only directory"))
+                        return@action
+                    }
                     dir.addDir(dirname)
+                }
+            }
+        }
+
+        command("mv") {
+            argument("from", StringArgumentType.string()) { from ->
+                argument("to", StringArgumentType.string()) { to ->
+                    action {
+                        val parts = from().split("/").toMutableList()
+                        val target = parts.removeLast()
+                        val fromDir = host.filesystem.getDirByPath(parts.joinToString("/"))
+                        if (fromDir.isReadOnly) {
+                            BuiltinPackets.FEEDBACK.send(connection, FeedbackPacket("${TextColor.ANSI.RED}Cannot move files in read-only directory"))
+                            return@action
+                        }
+                        val toDir = host.filesystem.getDirByPath(to())
+                        if (toDir.isReadOnly) {
+                            BuiltinPackets.FEEDBACK.send(
+                                connection,
+                                FeedbackPacket("${TextColor.ANSI.RED}Cannot move files into write-protected directory")
+                            )
+                            return@action
+                        }
+
+                        if (fromDir.directories.any { it.name == target }) {
+                            // move folder
+                            val source = fromDir.getDir(target)
+                            toDir.addDir(target).also {
+                                it.files = source.files
+                                it.directories = source.directories
+                            }
+                        } else {
+                            // move file
+                            val file = fromDir.getFile(target)
+                            toDir.addFile(target).also {
+                                it.contents = file.contents
+                            }
+                            fromDir.removeFile(target)
+                        }
+
+                        BuiltinPackets.FEEDBACK.send(connection, FeedbackPacket("${TextColor.ANSI.GREEN}Moved file(s)!"))
+                    }
                 }
             }
         }

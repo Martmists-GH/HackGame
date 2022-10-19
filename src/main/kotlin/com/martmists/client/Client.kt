@@ -1,6 +1,7 @@
 package com.martmists.client
 
 import com.martmists.client.commands.ClientCommandContext
+import com.martmists.client.commands.ClientCommands
 import com.martmists.client.network.ClientConnection
 import com.martmists.client.ui.GameWindow
 import com.martmists.client.ui.layer.GuiLayer
@@ -11,37 +12,38 @@ import com.martmists.common.loadConfig
 import com.martmists.common.network.BuiltinPackets
 import com.martmists.common.network.ConnectionManager
 import com.martmists.common.network.packets.CommandPacket
+import com.martmists.common.utilities.TextColor
 import kotlinx.coroutines.*
 import java.net.ConnectException
 
 object Client : ConnectionManager(), Loggable {
     private var running = true
-    private var connection: ClientConnection? = null
+    var connection: ClientConnection? = null
 
+    lateinit var window: GameWindow
+    lateinit var gui: GuiLayer
     val dispatcher = Dispatcher<ClientCommandContext>()
     val config by lazy {
         loadConfig<ClientConfig>("client.yaml", "/configs/client.yaml")
     }
 
     fun command(input: String) = runBlocking {
-        val ctx = ClientCommandContext(input)
-        if (!dispatcher.dispatch(ctx)) {
-            connection?.let {
-                BuiltinPackets.COMMAND.send(it, CommandPacket(input))
+        try {
+            val ctx = ClientCommandContext(input)
+            if (!dispatcher.dispatch(ctx)) {
+                connection?.let {
+                    BuiltinPackets.COMMAND.send(it, CommandPacket(input))
+                }
             }
-        }
-    }
-
-    private fun buildCommands() {
-        build(dispatcher) {
-
+        } catch (e: Exception) {
+            gui.log.addLine("${TextColor.ANSI.RED}${e::class.java.simpleName}: ${e.message}")
         }
     }
 
     @JvmStatic
     fun main(args: Array<String>) = runBlocking {
         ClientPacketCallbacks.initialize()
-        buildCommands()
+        ClientCommands.register(dispatcher)
         run()
     }
 
@@ -93,10 +95,11 @@ object Client : ConnectionManager(), Loggable {
     }
 
     private fun mainLoop() {
-        GameWindow().also {
-            it.addLayer(1000, GuiLayer())
-            it.start()
+        window = GameWindow().also {
+            gui = GuiLayer()
+            it.addLayer(1000, gui)
         }
+        window.start()
         running = false
         connection?.close()
     }

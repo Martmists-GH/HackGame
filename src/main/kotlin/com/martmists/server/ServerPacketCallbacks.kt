@@ -16,12 +16,13 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 
 object ServerPacketCallbacks {
-    private val argon2 = Argon2Factory.create()
+    val argon2 = Argon2Factory.create()
 
     init {
         BuiltinPackets.LOGIN.handler<ServerPacketContext> { packet ->
             if (session.isLoggedIn || session.device != null) {
                 BuiltinPackets.DISCONNECT.send(connection, DisconnectPacket("${TextColor.ANSI.RED}You are already logged in!", false))
+                connection.close()
                 return@handler
             }
 
@@ -29,6 +30,7 @@ object ServerPacketCallbacks {
                 transaction {
                     if (AccountTable.select { AccountTable.username eq packet.username }.count() > 0) {
                         BuiltinPackets.DISCONNECT.send(connection, DisconnectPacket("${TextColor.ANSI.RED}Username already taken", false))
+                        connection.close()
                     } else {
                         val ip = HostManager.getRandomAvailableIp()
                         val device = StoredHostDevice(
@@ -55,6 +57,7 @@ object ServerPacketCallbacks {
                     val account = AccountTable.select { AccountTable.username eq packet.username }.firstOrNull()
                     if (account == null) {
                         BuiltinPackets.DISCONNECT.send(connection, DisconnectPacket("${TextColor.ANSI.RED}Invalid username", false))
+                        connection.close()
                     } else {
                         if (argon2.verify(account[AccountTable.password], packet.password.toCharArray())) {
                             val host = HostManager.getHost(account[AccountTable.homeAddress])
@@ -63,6 +66,7 @@ object ServerPacketCallbacks {
                             BuiltinPackets.FEEDBACK.send(connection, FeedbackPacket("Login successful"))
                         } else {
                             BuiltinPackets.DISCONNECT.send(connection, DisconnectPacket("${TextColor.ANSI.RED}Invalid password", false))
+                            connection.close()
                         }
                     }
                 }
@@ -80,7 +84,7 @@ object ServerPacketCallbacks {
                     throw Exception("Command not found")
                 }
             } catch (e: Exception) {
-                BuiltinPackets.FEEDBACK.send(session.connection, FeedbackPacket("${TextColor.ANSI.RED}${e::class.java.name}: ${e.message}"))
+                BuiltinPackets.FEEDBACK.send(session.connection, FeedbackPacket("${TextColor.ANSI.RED}${e::class.java.simpleName}: ${e.message}"))
             }
         }
     }

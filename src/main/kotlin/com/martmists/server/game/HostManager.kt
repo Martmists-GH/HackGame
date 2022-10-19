@@ -1,19 +1,49 @@
 package com.martmists.server.game
 
+import com.martmists.common.utilities.Loggable
+import com.martmists.server.ServerPacketCallbacks
 import com.martmists.server.database.dataholders.StoredHostDevice
+import com.martmists.server.database.tables.AccountTable
 import com.martmists.server.database.tables.HostTable
 import com.martmists.server.database.transaction
+import com.martmists.server.game.vfs.VFSDirectory
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import kotlin.random.Random
 
-object HostManager {
+object HostManager : Loggable {
     private val activeHosts = mutableMapOf<String, HostDevice>()
+
+    init {
+        debug("before runblocking")
+        runBlocking {
+            debug("Creating dev host")
+            loadOrCreateStoredHost(
+                "123.123.123.123",
+                StoredHostDevice(
+                    100,
+                    listOf(),
+                    VFSDirectory.default(),
+                    "devpass1"
+                )
+            )
+
+            debug("before transaction")
+            transaction {
+                AccountTable.insertIgnore {
+                    it[AccountTable.username] = "dev"
+                    it[AccountTable.password] = ServerPacketCallbacks.argon2.hash(12, 65535, 1, "dev".toCharArray())
+                    it[AccountTable.homeAddress] = "123.123.123.123"
+                }
+            }
+        }
+    }
 
     suspend fun loadStoredHosts() {
         val map = transaction {
@@ -66,7 +96,7 @@ object HostManager {
      */
     suspend fun createStoredHost(ip: String, default: StoredHostDevice): HostDevice {
         transaction {
-            HostTable.insert {
+            HostTable.insertIgnore {
                 it[HostTable.address] = ip
                 it[HostTable.device] = ProtoBuf.encodeToByteArray(default)
             }

@@ -4,10 +4,11 @@ import com.martmists.common.utilities.Loggable
 import com.martmists.common.network.ConnectionManager
 import com.martmists.server.Server
 import com.martmists.server.game.ClientSession
+import com.martmists.server.game.HostManager
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-private object ServerConnectionManager : ConnectionManager(), Loggable {
+object ServerConnectionManager : ConnectionManager(), Loggable {
     private val clients = mutableListOf<ClientSession>()
 
     fun addClient(client: ClientSession) {
@@ -19,7 +20,9 @@ private object ServerConnectionManager : ConnectionManager(), Loggable {
     }
 
     override suspend fun run() {
-        info("Waiting for connections...")
+        info("Loading all hosts from database")
+        HostManager.loadStoredHosts()
+
         val server = factory.bind("0.0.0.0", Server.config.server.port)
 
         coroutineScope {
@@ -27,6 +30,7 @@ private object ServerConnectionManager : ConnectionManager(), Loggable {
                 mainLoop()
             }
 
+            info("Waiting for connections...")
             while (true) {
                 val socket = server.accept()
                 ServerConnection(socket).apply {
@@ -37,6 +41,6 @@ private object ServerConnectionManager : ConnectionManager(), Loggable {
     }
 
     private suspend fun mainLoop() {
-        // TODO
+
     }
 }

@@ -45,7 +45,8 @@ object PacketRegistry : Loggable {
             } else {
                 debug("Received packet of type $type")
             }
-            handler?.invoke(ctx, deserializer(data))
+            val obj = deserializer(data)
+            handler?.invoke(ctx, obj) ?: warn("Unhandled packet of type $type: $obj")
         }
     }
 

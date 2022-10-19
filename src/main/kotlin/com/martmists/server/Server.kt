@@ -4,6 +4,7 @@ import com.martmists.commandparser.dispatch.Dispatcher
 import com.martmists.commandparser.dsl.build
 import com.martmists.common.loadConfig
 import com.martmists.server.commands.ServerCommandContext
+import com.martmists.server.commands.ServerCommands
 import com.martmists.server.network.ServerConnectionManager
 import kotlinx.coroutines.runBlocking
 
@@ -14,16 +15,10 @@ object Server {
         loadConfig<ServerConfig>("server.yaml", "/configs/server.yaml")
     }
 
-    private fun buildCommands() {
-        build(dispatcher) {
-
-        }
-    }
-
     @JvmStatic
     fun main(args: Array<String>) = runBlocking {
         ServerPacketCallbacks.initialize()
-        buildCommands()
+        ServerCommands.register(dispatcher)
         ServerConnectionManager.run()
     }
 }

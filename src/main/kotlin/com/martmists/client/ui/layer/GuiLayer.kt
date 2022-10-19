@@ -11,7 +11,7 @@ import org.lwjgl.util.yoga.Yoga.*
 class GuiLayer : ElementLayer() {
     private val mappedElements = mutableMapOf<String, Element>()
 
-    private val log = Window(TextElement(
+    val log = Window(TextElement(
         "${TextColor.ANSI.CYAN}Game loaded.${TextColor.RESET}",
         true
     )).also { el ->

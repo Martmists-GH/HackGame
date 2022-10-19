@@ -170,6 +170,13 @@ open class TextElement(content: String, private val scrollable: Boolean = false)
         println("Scroll: $x, $y")
     }
 
+    override fun clear() {
+        super.clear()
+        buffer = ""
+        realText = ""
+        realOnUpdateBounds(false)
+    }
+
     private fun realOnUpdateBounds(causedByUpdate: Boolean) {
         val tmp = realText
         realText = ""

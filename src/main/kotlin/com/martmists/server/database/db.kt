@@ -1,11 +1,16 @@
 package com.martmists.server.database
 
 import com.martmists.server.Server
+import com.martmists.server.database.dataholders.StoredHostDevice
 import com.martmists.server.database.tables.AccountTable
 import com.martmists.server.database.tables.HostTable
+import com.martmists.server.game.HostManager
+import com.martmists.server.game.vfs.VFSDirectory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionAsync
 import java.sql.Connection

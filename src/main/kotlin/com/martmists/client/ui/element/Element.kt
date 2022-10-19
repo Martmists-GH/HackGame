@@ -156,4 +156,8 @@ abstract class Element : Loggable {
             }
         }
     }
+
+    open fun clear() {
+
+    }
 }

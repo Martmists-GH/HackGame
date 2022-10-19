@@ -40,6 +40,10 @@ open class Window(private val child: Element) : TextElement("", false) {
         }
     }
 
+    override fun clear() {
+        child.clear()
+    }
+
     override fun onCharPressed(char: Char) {
         child.onCharPressed(char)
     }
